@@ -1,5 +1,4 @@
 
-import { useEffect, useState } from "react";
 import {
     Activity,
     CalendarDays,
@@ -8,67 +7,18 @@ import {
     LogOut,
     ArrowUpRight,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase.jsx";
+import {
+    Badge, Card, Skeleton, ThemeIcon,
+} from "@mantine/core";
+import useAdminDashboard from "../hooks/useAdminDashboard";
+import { Link } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 export default function AdminDashboard({ profile }) {
-    const navigate = useNavigate();
 
-    const [stats, setStats] = useState({
-        doctors: 0,
-        appointments: 0,
-        pending: 0,
-    });
+    const { stats, loading, error, refreshStats } = useAdminDashboard();
+    const { logout } = useAuth();
 
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function loadStats() {
-            try {
-                const [doctors, appointments, pending] = await Promise.all([
-                    supabase
-                        .from("doctors")
-                        .select("id", { count: "exact", head: true }),
-
-                    supabase
-                        .from("appointments")
-                        .select("id", { count: "exact", head: true }),
-
-                    supabase
-                        .from("appointments")
-                        .select("id", { count: "exact", head: true })
-                        .eq("status", "pending"),
-                ]);
-
-                if (doctors.error) throw doctors.error;
-                if (appointments.error) throw appointments.error;
-                if (pending.error) throw pending.error;
-
-                setStats({
-                    doctors: doctors.count ?? 0,
-                    appointments: appointments.count ?? 0,
-                    pending: pending.count ?? 0,
-                });
-            } catch (error) {
-                console.error("Failed to load dashboard stats:", error.message);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        loadStats();
-    }, []);
-
-    async function logout() {
-        const { error } = await supabase.auth.signOut();
-
-        if (error) {
-            console.error("Sign out failed:", error.message);
-            return;
-        }
-
-        navigate("/login");
-    }
 
     return (
         <div className="dashboard-shell">
@@ -80,7 +30,10 @@ export default function AdminDashboard({ profile }) {
 
                 <p className="sidebar-label">WORKSPACE</p>
 
-                <Link className="sidebar-link active" to="/admin/dashboard">
+                <Link
+                    className="sidebar-link active"
+                    to="/admin/dashboard"
+                >
                     <Activity size={18} />
                     Dashboard
                 </Link>
@@ -90,24 +43,38 @@ export default function AdminDashboard({ profile }) {
                     Doctors
                 </Link>
 
-                <Link className="sidebar-link" to="/admin/appointments">
+                <Link className="sidebar-link" to="/admin/appointments"  >
                     <CalendarDays size={18} />
                     Appointments
                 </Link>
-
+                {
+                    error && (
+                        <div role="alert" className="dashboard-error">
+                            <p>{error}</p>
+                            <button onClick={refreshStats}>Try again</button>
+                        </div>
+                    )
+                }
                 <div className="sidebar-bottom">
                     <div className="user-mini">
                         <div className="avatar">
-                            {(profile?.full_name || "A").charAt(0).toUpperCase()}
+                            {(profile?.full_name || "A")
+                                .charAt(0)
+                                .toUpperCase()}
                         </div>
 
                         <div className="user-mini-text">
-                            <strong>{profile?.full_name || "Administrator"}</strong>
+                            <strong>
+                                {profile?.full_name || "Administrator"}
+                            </strong>
                             <span>Administrator</span>
                         </div>
                     </div>
 
-                    <button className="logout-button" onClick={logout}>
+                    <button
+                        className="logout-button"
+                        onClick={logout}
+                    >
                         <LogOut size={18} />
                         Sign out
                     </button>
@@ -124,18 +91,28 @@ export default function AdminDashboard({ profile }) {
                         </p>
                     </div>
 
-                    <div className="admin-chip">
+                    <Badge
+                        className="admin-chip"
+                        variant="light"
+                        color="teal"
+                        size="lg"
+                        radius="xl"
+                    >
                         <span className="online-dot" />
                         Admin access
-                    </div>
+                    </Badge>
                 </header>
 
                 <section className="welcome-banner">
                     <div>
                         <p>YOUR CLINIC WORKSPACE</p>
-                        <h2>Welcome back, {profile?.full_name || "Admin"}.</h2>
+                        <h2>
+                            Welcome back,{" "}
+                            {profile?.full_name || "Admin"}.
+                        </h2>
                         <span>
-                            Manage your doctors and appointments in one place.
+                            Manage your doctors and appointments in one
+                            place.
                         </span>
                     </div>
 
@@ -146,21 +123,21 @@ export default function AdminDashboard({ profile }) {
                     <StatCard
                         title="Total doctors"
                         value={stats.doctors}
-                        icon={<Stethoscope />}
+                        icon={<Stethoscope size={22} />}
                         loading={loading}
                     />
 
                     <StatCard
                         title="Total appointments"
                         value={stats.appointments}
-                        icon={<CalendarDays />}
+                        icon={<CalendarDays size={22} />}
                         loading={loading}
                     />
 
                     <StatCard
                         title="Pending bookings"
                         value={stats.pending}
-                        icon={<Users />}
+                        icon={<Users size={22} />}
                         loading={loading}
                     />
                 </section>
@@ -168,20 +145,22 @@ export default function AdminDashboard({ profile }) {
                 <section className="section-heading">
                     <div>
                         <h2>Management</h2>
-                        <p className="muted">Choose what you want to manage.</p>
+                        <p className="muted">
+                            Choose what you want to manage.
+                        </p>
                     </div>
                 </section>
 
                 <section className="management-grid">
                     <ManagementCard
-                        icon={<Stethoscope />}
+                        icon={<Stethoscope size={22} />}
                         title="Doctor management"
                         description="Update doctor profiles, consultation fees and status."
                         target="/admin/doctors"
                     />
 
                     <ManagementCard
-                        icon={<CalendarDays />}
+                        icon={<CalendarDays size={22} />}
                         title="Appointments"
                         description="Review patient bookings and appointment statuses."
                         target="/admin/appointments"
@@ -194,26 +173,69 @@ export default function AdminDashboard({ profile }) {
 
 function StatCard({ title, value, icon, loading }) {
     return (
-        <article className="stat-card">
-            <div className="stat-icon">{icon}</div>
+        <Card
+            className="stat-card"
+            padding="lg"
+            radius="lg"
+            withBorder
+        >
+            <ThemeIcon
+                className="stat-icon"
+                size={46}
+                radius="md"
+                variant="light"
+                color="violet"
+            >
+                {icon}
+            </ThemeIcon>
+
             <p>{title}</p>
-            <h3>{loading ? "—" : value}</h3>
+
+            {loading ? (
+                <Skeleton height={32} width={70} />
+            ) : (
+                <h3>{value}</h3>
+            )}
+
             <span className="stat-caption">
-                Live data from Supabase <ArrowUpRight size={14} />
+                Live data from Supabase{" "}
+                <ArrowUpRight size={14} />
             </span>
-        </article>
+        </Card>
     );
 }
 
-function ManagementCard({ icon, title, description, target }) {
+function ManagementCard({
+    icon,
+    title,
+    description,
+    target,
+}) {
     return (
-        <Link to={target} className="management-card">
-            <div className="management-icon">{icon}</div>
+        <Card
+            component={Link}
+            to={target}
+            className="management-card"
+            padding="lg"
+            radius="lg"
+            withBorder
+        >
+            <ThemeIcon
+                className="management-icon"
+                size={46}
+                radius="md"
+                variant="light"
+                color="violet"
+            >
+                {icon}
+            </ThemeIcon>
+
             <h3>{title}</h3>
             <p>{description}</p>
+
             <span className="card-link">
                 Open section <ArrowUpRight size={16} />
             </span>
-        </Link>
+        </Card>
     );
 }

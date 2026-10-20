@@ -4,8 +4,7 @@ import DoctorForm from "./DoctorForm";
 
 export default function DoctorModal({ doctor, initialForm, saving, formError, onSave, onClose,
 }) {
-    console.log("Selected doctor:", doctor);
-    console.log("Doctor ID:", doctor?.id);
+
     return (
         <div
             className="doctor-modal-backdrop"

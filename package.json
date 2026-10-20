@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^9.7.3",
+    "@mantine/hooks": "^9.7.3",
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.59.0",
     "react": "^19.2.8",

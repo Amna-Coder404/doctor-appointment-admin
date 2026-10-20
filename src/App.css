@@ -69,6 +69,7 @@
 .login-card {
     width: 100%;
     max-width: 420px;
+    padding: 20px 10px;
 }
 
 .login-card .eyebrow {
