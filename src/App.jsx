@@ -5,11 +5,14 @@ import "@mantine/core/styles.css";
 import "./App.css";
 
 import useAuth from "./hooks/useAuth";
+import DoctorAvailability from "./pages/DoctorAvailability";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorsManagement from "./pages/DoctorsManagement";
+
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/AdminLayout";
 
 export default function App() {
   const { session, profile, loading } = useAuth();
@@ -26,7 +29,8 @@ export default function App() {
     );
   }
 
-  const homePath = !session ? "/login"
+  const homePath = !session
+    ? "/login"
     : role === "admin"
       ? "/admin/dashboard"
       : role === "doctor"
@@ -41,42 +45,59 @@ export default function App() {
           element={
             !session ? (
               <Login />
-            ) : role === "admin" ? (
-              <Navigate to="/admin/dashboard" replace />
-            ) : role === "doctor" ? (
-              <Navigate to="/doctor/dashboard" replace />
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to={homePath} replace />
             )
           }
         />
 
+        {/* Admin routes share one sidebar */}
         <Route
-          path="/admin/dashboard"
+          path="/admin"
           element={
             <ProtectedRoute
               session={session}
               profile={profile}
               requiredRole="admin"
             >
+              <AdminLayout profile={profile} />
+            </ProtectedRoute>
+          }
+        >
+          <Route
+            path="dashboard"
+            element={
               <AdminDashboard profile={profile} />
-            </ProtectedRoute>
-          }
-        />
+            }
+          />
 
-        <Route
-          path="/admin/doctors"
-          element={
-            <ProtectedRoute
-              session={session}
-              profile={profile}
-              requiredRole="admin"
-            >
-              <DoctorsManagement />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="doctors"
+            element={<DoctorsManagement />}
+          />
 
+          {/* Add your appointments page here when available */}
+          {/* 
+                    <Route
+                        path="appointments"
+                        element={<Appointments />}
+                    />
+                    */}
+          <Route
+            path="/admin/availability"
+            element={
+              <ProtectedRoute
+                session={session}
+                profile={profile}
+                requiredRole="admin"
+              >
+                <DoctorAvailability />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+
+        {/* Doctor routes */}
         <Route
           path="/doctor/dashboard"
           element={

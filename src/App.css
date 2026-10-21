@@ -2,6 +2,10 @@
     min-height: 100vh;
 }
 
+/* =========================
+   LOGIN PAGE
+========================= */
+
 .login-page {
     min-height: 100vh;
     display: grid;
@@ -131,6 +135,7 @@
     background: transparent;
     color: #81939b;
     padding: 4px;
+    cursor: pointer;
 }
 
 .login-button {
@@ -144,6 +149,7 @@
     font-size: 14px;
     font-weight: 700;
     transition: background 0.2s;
+    cursor: pointer;
 }
 
 .login-button:hover {
@@ -168,6 +174,10 @@
     font-size: 13px;
     line-height: 1.6;
 }
+
+/* =========================
+   LOADING & ACCESS
+========================= */
 
 .loading-screen {
     min-height: 100vh;
@@ -208,7 +218,12 @@
     padding: 10px 16px;
     background: #0f766e;
     color: white;
+    cursor: pointer;
 }
+
+/* =========================
+   DASHBOARD LAYOUT
+========================= */
 
 .dashboard-shell {
     min-height: 100vh;
@@ -218,25 +233,121 @@
 .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    z-index: 5;
+    z-index: 1003;
     width: 245px;
+    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     padding: 27px 17px;
+    overflow-y: auto;
     background: #fff;
     border-right: 1px solid #e8eef0;
 }
 
+.admin-page-content {
+    flex: 1;
+    min-width: 0;
+    min-height: 100vh;
+    margin-left: 245px;
+}
+
+.dashboard-main {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+/* =========================
+   SIDEBAR BRAND & CONTROLS
+========================= */
+
 .sidebar-brand {
     display: flex;
     align-items: center;
-    gap: 11px;
+    justify-content: space-between;
+    gap: 10px;
     padding: 3px 12px 34px;
     color: #0f766e;
     font-size: 20px;
     font-weight: 800;
     letter-spacing: -0.8px;
 }
+
+.sidebar-brand-info {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.sidebar-close-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-close-btn:hover {
+    background: #f1f5f9;
+    color: #0f766e;
+}
+
+/* Burger header: tablet and mobile only */
+
+.mobile-admin-header {
+    display: none;
+}
+
+.sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    color: #0f766e;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background: #f0fdfa;
+    border-color: #99f6e4;
+}
+
+.mobile-brand {
+    color: #0f766e;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+}
+
+/* Dark background behind open sidebar */
+
+.sidebar-overlay {
+    display: none;
+}
+
+/* =========================
+   SIDEBAR NAVIGATION
+========================= */
 
 .sidebar-label {
     margin: 0 12px 13px;
@@ -256,12 +367,23 @@
     color: #687b85;
     font-size: 13px;
     font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-link:hover {
+    background: #f0fdfa;
+    color: #0f766e;
 }
 
 .sidebar-link.active {
     background: #e7f5f2;
     color: #0f766e;
 }
+
+/* =========================
+   SIDEBAR PROFILE & LOGOUT
+========================= */
 
 .sidebar-bottom {
     margin-top: auto;
@@ -319,18 +441,16 @@
     color: #b45353;
     font-size: 13px;
     font-weight: 600;
+    cursor: pointer;
 }
 
 .logout-button:hover {
     background: #fff1f1;
 }
 
-.dashboard-main {
-    width: calc(100% - 245px);
-    min-height: 100vh;
-    margin-left: 245px;
-    padding: 40px;
-}
+/* =========================
+   DASHBOARD HEADER
+========================= */
 
 .dashboard-header {
     display: flex;
@@ -375,6 +495,10 @@
     background: #10b981;
 }
 
+/* =========================
+   WELCOME BANNER
+========================= */
+
 .welcome-banner {
     display: flex;
     align-items: center;
@@ -410,6 +534,10 @@
     flex-shrink: 0;
     color: #d2f5ee;
 }
+
+/* =========================
+   STATISTICS CARDS
+========================= */
 
 .stats-grid {
     display: grid;
@@ -458,10 +586,15 @@
     font-size: 10px;
 }
 
+/* =========================
+   MANAGEMENT CARDS
+========================= */
+
 .section-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     margin-bottom: 18px;
 }
 
@@ -488,6 +621,11 @@
     border-radius: 14px;
     background: white;
     transition: transform 0.2s, border-color 0.2s;
+}
+
+a.management-card {
+    text-decoration: none;
+    color: inherit;
 }
 
 a.management-card:hover {
@@ -522,6 +660,10 @@ a.management-card:hover {
     font-size: 11px;
 }
 
+/* =========================
+   DOCTOR DASHBOARD
+========================= */
+
 .doctor-banner {
     background: linear-gradient(115deg, #6d28d9, #8b5cf6);
 }
@@ -538,13 +680,92 @@ a.management-card:hover {
     margin-top: 25px;
 }
 
-@media (max-width: 900px) {
+/* =========================
+   TABLET RESPONSIVENESS
+========================= */
+
+@media (max-width: 1024px) {
+    .mobile-admin-header {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 1001;
+        height: 64px;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #fff;
+        border-bottom: 1px solid #e8eef0;
+        box-sizing: border-box;
+    }
+
+    .sidebar {
+        width: 270px;
+        max-width: 85vw;
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition:
+            transform 0.25s ease,
+            visibility 0.25s ease;
+        box-shadow: none;
+    }
+
+    .sidebar.sidebar-open {
+        transform: translateX(0);
+        visibility: visible;
+        box-shadow: 12px 0 35px rgba(15, 23, 42, 0.16);
+    }
+
+    .sidebar-close-btn {
+        display: flex;
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1002;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: rgba(15, 23, 42, 0.42);
+        cursor: pointer;
+    }
+
+    .admin-page-content {
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
+        padding-top: 64px;
+        box-sizing: border-box;
+    }
+
+    .dashboard-main {
+        width: 100%;
+        padding: 28px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* =========================
+   MOBILE RESPONSIVENESS
+========================= */
+
+@media (max-width: 620px) {
     .login-page {
         grid-template-columns: 1fr;
     }
 
     .login-brand {
-        padding: 35px;
+        padding: 35px 25px;
+    }
+
+    .login-brand h1 {
+        font-size: 32px;
     }
 
     .brand-logo {
@@ -556,51 +777,29 @@ a.management-card:hover {
     }
 
     .login-side {
-        padding: 45px 25px;
+        padding: 35px 22px;
+    }
+
+    .login-card {
+        padding: 10px 0;
+    }
+
+    .mobile-admin-header {
+        padding: 0 15px;
+    }
+
+    .mobile-brand {
+        font-size: 17px;
     }
 
     .dashboard-main {
-        padding: 25px;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 620px) {
-    .sidebar {
-        position: static;
-        width: 100%;
-        min-height: auto;
-        padding: 15px;
-        border-right: 0;
-        border-bottom: 1px solid #e8eef0;
-    }
-
-    .dashboard-shell {
-        flex-direction: column;
-    }
-
-    .sidebar-brand {
-        padding-bottom: 15px;
-    }
-
-    .sidebar-label,
-    .sidebar-link,
-    .sidebar-bottom {
-        display: none;
-    }
-
-    .dashboard-main {
-        width: 100%;
-        margin-left: 0;
         padding: 22px 16px;
     }
 
     .dashboard-header {
         align-items: flex-start;
         flex-direction: column;
+        gap: 12px;
     }
 
     .welcome-banner {
@@ -609,10 +808,44 @@ a.management-card:hover {
 
     .welcome-banner>svg {
         width: 35px;
+        flex-shrink: 0;
     }
 
     .stats-grid,
     .management-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .management-card {
+        padding: 20px;
+    }
+
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .access-denied {
+        padding: 24px 16px;
+    }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

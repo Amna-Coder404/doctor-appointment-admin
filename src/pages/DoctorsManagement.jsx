@@ -37,12 +37,7 @@ export default function DoctorsManagement() {
         <main className="doctors-page">
             <header className="doctors-header">
                 <div>
-                    <button
-                        className="doctor-back-btn"
-                        onClick={() => navigate("/admin/dashboard")}
-                    >
-                        <ArrowLeft size={17} /> Dashboard
-                    </button>
+
                     <h1>Doctors Management</h1>
                     <p>Manage doctor profiles and availability.</p>
                 </div>

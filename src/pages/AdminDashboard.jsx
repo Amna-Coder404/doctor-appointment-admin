@@ -4,170 +4,129 @@ import {
     CalendarDays,
     Stethoscope,
     Users,
-    LogOut,
     ArrowUpRight,
+    Clock,
 } from "lucide-react";
+
 import {
-    Badge, Card, Skeleton, ThemeIcon,
+    Badge,
+    Card,
+    Skeleton,
+    ThemeIcon,
 } from "@mantine/core";
-import useAdminDashboard from "../hooks/useAdminDashboard";
+
 import { Link } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
+import useAdminDashboard from "../hooks/useAdminDashboard";
 
 export default function AdminDashboard({ profile }) {
-
-    const { stats, loading, error, refreshStats } = useAdminDashboard();
-    const { logout } = useAuth();
-
+    const {
+        stats,
+        loading,
+        error,
+        refreshStats,
+    } = useAdminDashboard();
 
     return (
-        <div className="dashboard-shell">
-            <aside className="sidebar">
-                <div className="sidebar-brand">
-                    <Activity size={25} />
-                    <span>MediBook</span>
+        <main className="dashboard-main">
+            <header className="dashboard-header">
+                <div>
+                    <p className="eyebrow">OVERVIEW</p>
+                    <h1>Admin dashboard</h1>
+                    <p className="muted">
+                        Here's what's happening at your clinic.
+                    </p>
                 </div>
 
-                <p className="sidebar-label">WORKSPACE</p>
-
-                <Link
-                    className="sidebar-link active"
-                    to="/admin/dashboard"
+                <Badge
+                    className="admin-chip"
+                    variant="light"
+                    color="teal"
+                    size="lg"
+                    radius="xl"
                 >
-                    <Activity size={18} />
-                    Dashboard
-                </Link>
+                    <span className="online-dot" />
+                    Admin access
+                </Badge>
+            </header>
 
-                <Link className="sidebar-link" to="/admin/doctors">
-                    <Stethoscope size={18} />
-                    Doctors
-                </Link>
-
-                <Link className="sidebar-link" to="/admin/appointments"  >
-                    <CalendarDays size={18} />
-                    Appointments
-                </Link>
-                {
-                    error && (
-                        <div role="alert" className="dashboard-error">
-                            <p>{error}</p>
-                            <button onClick={refreshStats}>Try again</button>
-                        </div>
-                    )
-                }
-                <div className="sidebar-bottom">
-                    <div className="user-mini">
-                        <div className="avatar">
-                            {(profile?.full_name || "A")
-                                .charAt(0)
-                                .toUpperCase()}
-                        </div>
-
-                        <div className="user-mini-text">
-                            <strong>
-                                {profile?.full_name || "Administrator"}
-                            </strong>
-                            <span>Administrator</span>
-                        </div>
-                    </div>
-
-                    <button
-                        className="logout-button"
-                        onClick={logout}
-                    >
-                        <LogOut size={18} />
-                        Sign out
+            {error && (
+                <div role="alert" className="dashboard-error">
+                    <p>{error}</p>
+                    <button type="button" onClick={refreshStats}>
+                        Try again
                     </button>
                 </div>
-            </aside>
+            )}
 
-            <main className="dashboard-main">
-                <header className="dashboard-header">
-                    <div>
-                        <p className="eyebrow">OVERVIEW</p>
-                        <h1>Admin dashboard</h1>
-                        <p className="muted">
-                            Here's what's happening at your clinic.
-                        </p>
-                    </div>
+            <section className="welcome-banner">
+                <div>
+                    <p>YOUR CLINIC WORKSPACE</p>
+                    <h2>
+                        Welcome back, {profile?.full_name || "Admin"}.
+                    </h2>
+                    <span>
+                        Manage your doctors and appointments in one place.
+                    </span>
+                </div>
 
-                    <Badge
-                        className="admin-chip"
-                        variant="light"
-                        color="teal"
-                        size="lg"
-                        radius="xl"
-                    >
-                        <span className="online-dot" />
-                        Admin access
-                    </Badge>
-                </header>
+                <Activity size={54} strokeWidth={1.3} />
+            </section>
 
-                <section className="welcome-banner">
-                    <div>
-                        <p>YOUR CLINIC WORKSPACE</p>
-                        <h2>
-                            Welcome back,{" "}
-                            {profile?.full_name || "Admin"}.
-                        </h2>
-                        <span>
-                            Manage your doctors and appointments in one
-                            place.
-                        </span>
-                    </div>
+            <section className="stats-grid">
+                <StatCard
+                    title="Total doctors"
+                    value={stats?.doctors}
+                    icon={<Stethoscope size={22} />}
+                    loading={loading}
+                />
 
-                    <Activity size={54} strokeWidth={1.3} />
-                </section>
+                <StatCard
+                    title="Total appointments"
+                    value={stats?.appointments}
+                    icon={<CalendarDays size={22} />}
+                    loading={loading}
+                />
 
-                <section className="stats-grid">
-                    <StatCard
-                        title="Total doctors"
-                        value={stats.doctors}
-                        icon={<Stethoscope size={22} />}
-                        loading={loading}
-                    />
+                <StatCard
+                    title="Pending bookings"
+                    value={stats?.pending}
+                    icon={<Users size={22} />}
+                    loading={loading}
+                />
+            </section>
 
-                    <StatCard
-                        title="Total appointments"
-                        value={stats.appointments}
-                        icon={<CalendarDays size={22} />}
-                        loading={loading}
-                    />
+            <section className="section-heading">
+                <div>
+                    <h2>Management</h2>
+                    <p className="muted">
+                        Choose what you want to manage.
+                    </p>
+                </div>
+            </section>
 
-                    <StatCard
-                        title="Pending bookings"
-                        value={stats.pending}
-                        icon={<Users size={22} />}
-                        loading={loading}
-                    />
-                </section>
+            <section className="management-grid">
+                <ManagementCard
+                    icon={<Stethoscope size={22} />}
+                    title="Doctor management"
+                    description="Update doctor profiles, consultation fees and status."
+                    target="/admin/doctors"
+                />
 
-                <section className="section-heading">
-                    <div>
-                        <h2>Management</h2>
-                        <p className="muted">
-                            Choose what you want to manage.
-                        </p>
-                    </div>
-                </section>
+                <ManagementCard
+                    icon={<CalendarDays size={22} />}
+                    title="Appointments"
+                    description="Review patient bookings and appointment statuses."
+                    target="/admin/appointments"
+                />
 
-                <section className="management-grid">
-                    <ManagementCard
-                        icon={<Stethoscope size={22} />}
-                        title="Doctor management"
-                        description="Update doctor profiles, consultation fees and status."
-                        target="/admin/doctors"
-                    />
-
-                    <ManagementCard
-                        icon={<CalendarDays size={22} />}
-                        title="Appointments"
-                        description="Review patient bookings and appointment statuses."
-                        target="/admin/appointments"
-                    />
-                </section>
-            </main>
-        </div>
+                <ManagementCard
+                    icon={<Clock size={22} />}
+                    title="Doctor availability"
+                    description="Manage weekly working hours and unavailable periods."
+                    target="/admin/doctor-availability"
+                />
+            </section>
+        </main>
     );
 }
 
@@ -194,7 +153,7 @@ function StatCard({ title, value, icon, loading }) {
             {loading ? (
                 <Skeleton height={32} width={70} />
             ) : (
-                <h3>{value}</h3>
+                <h3>{value ?? 0}</h3>
             )}
 
             <span className="stat-caption">
@@ -205,12 +164,7 @@ function StatCard({ title, value, icon, loading }) {
     );
 }
 
-function ManagementCard({
-    icon,
-    title,
-    description,
-    target,
-}) {
+function ManagementCard({ icon, title, description, target }) {
     return (
         <Card
             component={Link}
