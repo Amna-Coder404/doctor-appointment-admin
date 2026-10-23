@@ -2,7 +2,7 @@
 import { X, Stethoscope } from "lucide-react";
 import DoctorForm from "./DoctorForm";
 
-export default function DoctorModal({ doctor, initialForm, saving, formError, onSave, onClose,
+export default function DoctorModal({ doctor, initialForm, saving, formError, onSave, onClose, isEditing
 }) {
 
     return (
@@ -43,7 +43,6 @@ export default function DoctorModal({ doctor, initialForm, saving, formError, on
                         <X size={20} />
                     </button>
                 </header>
-
                 <DoctorForm
                     key={doctor?.id || "new-doctor"}
                     initialForm={initialForm}
@@ -51,6 +50,7 @@ export default function DoctorModal({ doctor, initialForm, saving, formError, on
                     formError={formError}
                     onSave={onSave}
                     onCancel={onClose}
+                    isEditing={Boolean(doctor)}
                 />
             </section>
         </div>

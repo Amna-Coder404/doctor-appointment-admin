@@ -3,13 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
     getDoctors,
-    addDoctor,
+    createDoctorAccount,
     updateDoctor,
     updateDoctorStatus,
-    uploadDoctorImage
+    uploadDoctorImage,
 } from "../services/doctorService";
-
-
 
 const emptyForm = {
     full_name: "",
@@ -40,7 +38,7 @@ export default function useDoctors() {
     const [formOpen, setFormOpen] = useState(false);
     const [form, setForm] = useState({ ...emptyForm });
 
-    // Load doctors from Supabase
+    // Load doctors from Supabase.
     const fetchDoctors = useCallback(async () => {
         setLoading(true);
         setError("");
@@ -59,7 +57,7 @@ export default function useDoctors() {
         fetchDoctors();
     }, [fetchDoctors]);
 
-    // Search and status filter
+    // Search and filter doctors by status.
     const filteredDoctors = useMemo(() => {
         const query = search.trim().toLowerCase();
 
@@ -68,7 +66,9 @@ export default function useDoctors() {
                 doctor.full_name,
                 doctor.specialization,
                 doctor.email,
-            ].some((value) => value?.toLowerCase().includes(query));
+            ].some((value) =>
+                value?.toLowerCase().includes(query)
+            );
 
             const matchesFilter =
                 filter === "all" ||
@@ -79,7 +79,7 @@ export default function useDoctors() {
         });
     }, [doctors, search, filter]);
 
-    // Open an empty form
+    // Open a blank form for a new doctor.
     function openAdd() {
         setEditingDoctor(null);
         setForm({ ...emptyForm });
@@ -88,15 +88,19 @@ export default function useDoctors() {
         setFormOpen(true);
     }
 
-    // Open the form with existing doctor details
+    // Open the form with existing doctor details.
     function openEdit(doctor) {
         setEditingDoctor(doctor);
 
         setForm({
             ...emptyForm,
             ...doctor,
-            experience_years: String(doctor.experience_years ?? 0),
-            consultation_fee: String(doctor.consultation_fee ?? 0),
+            experience_years: String(
+                doctor.experience_years ?? 0
+            ),
+            consultation_fee: String(
+                doctor.consultation_fee ?? 0
+            ),
         });
 
         setFormError("");
@@ -104,7 +108,7 @@ export default function useDoctors() {
         setFormOpen(true);
     }
 
-    // Close the modal
+    // Close the modal.
     function closeModal() {
         if (saving) return;
 
@@ -114,15 +118,22 @@ export default function useDoctors() {
         setFormError("");
     }
 
-    // Save a new doctor or update an existing one
+    // Create a real login account for a new doctor,
+    // or update the profile of an existing doctor.
     async function handleSave(event, values, file) {
         event.preventDefault();
+
+        if (saving) return;
+
         setFormError("");
         setError("");
 
-        // Read and validate submitted values
         const name = values.full_name?.trim() ?? "";
-        const specialization = values.specialization?.trim() ?? "";
+        const specialization =
+            values.specialization?.trim() ?? "";
+
+        const email =
+            values.email?.trim().toLowerCase() ?? "";
 
         const experienceText = String(
             values.experience_years ?? ""
@@ -138,6 +149,24 @@ export default function useDoctors() {
         if (!name || !specialization) {
             setFormError(
                 "Doctor name and specialization are required."
+            );
+            return;
+        }
+
+        // New doctors need an email for the login invitation.
+        if (!editingDoctor && !email) {
+            setFormError(
+                "Email is required to create a doctor login."
+            );
+            return;
+        }
+
+        if (
+            email &&
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        ) {
+            setFormError(
+                "Please enter a valid email address."
             );
             return;
         }
@@ -164,10 +193,19 @@ export default function useDoctors() {
             return;
         }
 
+        const doctorId = editingDoctor?.id;
+
+        if (editingDoctor && !doctorId) {
+            setFormError(
+                "Doctor ID is missing. Close the form and select the doctor again."
+            );
+            return;
+        }
+
         setSaving(true);
 
         try {
-            // Keep the existing photo unless a new one is selected
+            // Preserve the existing image unless a new one is selected.
             let imageUrl = values.profile_image_url || null;
 
             if (file) {
@@ -177,51 +215,53 @@ export default function useDoctors() {
             const doctorData = {
                 full_name: name,
                 specialization,
-                qualification: values.qualification?.trim() || null,
+                qualification:
+                    values.qualification?.trim() || null,
                 experience_years: experience,
                 consultation_fee: fee,
                 bio: values.bio?.trim() || null,
                 profile_image_url: imageUrl,
                 phone: values.phone?.trim() || null,
-                email: values.email?.trim() || null,
-                clinic_name: values.clinic_name?.trim() || null,
-                clinic_address: values.clinic_address?.trim() || null,
+                email: email || null,
+                clinic_name:
+                    values.clinic_name?.trim() || null,
+                clinic_address:
+                    values.clinic_address?.trim() || null,
             };
-
 
             let savedDoctor;
 
-            const doctorId = editingDoctor?.id;
-
-            if (editingDoctor && !doctorId) {
-                console.error("Invalid doctor record:", editingDoctor);
-                setFormError(
-                    "Doctor ID is missing. Close the form and select the doctor again."
-                );
-                return;
-            }
-
             if (doctorId) {
-                savedDoctor = await updateDoctor(doctorId, doctorData);
+                // Editing does not create another Auth account.
+                savedDoctor = await updateDoctor(
+                    doctorId,
+                    doctorData
+                );
 
                 setDoctors((current) =>
                     current.map((doctor) =>
-                        doctor.id === savedDoctor.id ? savedDoctor : doctor
+                        doctor.id === savedDoctor.id
+                            ? savedDoctor
+                            : doctor
                     )
                 );
             } else {
-                savedDoctor = await addDoctor(doctorData);
+                // The Edge Function creates the Auth user,
+                // doctor profile, linked doctor record, and invitation.
+                savedDoctor = await createDoctorAccount(
+                    doctorData
+                );
 
-                setDoctors((current) => [savedDoctor, ...current]);
+                setDoctors((current) => [
+                    savedDoctor,
+                    ...current,
+                ]);
             }
 
             setFormOpen(false);
             setEditingDoctor(null);
             setForm({ ...emptyForm });
             setFormError("");
-
-
-
         } catch (err) {
             console.error("Save doctor error:", err);
 
@@ -233,7 +273,7 @@ export default function useDoctors() {
         }
     }
 
-    // Activate or deactivate without deleting the doctor
+    // Activate or deactivate a doctor without deleting the record.
     async function handleToggleStatus(doctor) {
         const action = doctor.is_active
             ? "deactivate"

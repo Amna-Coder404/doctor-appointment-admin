@@ -1,7 +1,7 @@
 
 import { supabase } from "../lib/supabase.jsx";
 
-// Get Current Doctor (auth )
+// Get all doctor profiles.
 export async function getDoctors() {
     const { data, error } = await supabase
         .from("doctors")
@@ -12,22 +12,39 @@ export async function getDoctors() {
     return data ?? [];
 }
 
-// Add a New Doctor and there by defult status true (mean Active)
-export async function addDoctor(doctor) {
-    const { data, error } = await supabase
-        .from("doctors")
-        .insert({
-            ...doctor,
-            is_active: true,
-        })
-        .select()
-        .single();
+// Create a real doctor account through the secure Edge Function.
 
-    if (error) throw error;
-    return data;
+export async function createDoctorAccount(doctor) {
+    const { data, error } = await supabase.functions.invoke(
+        "create-doctor-account",
+        { body: { doctor } }
+    );
+
+    if (error) {
+        let message = error.message || "Could not create doctor account.";
+
+        try {
+            const response = error.context;
+            if (response && typeof response.clone === "function") {
+                const body = await response.clone().json();
+                message = body?.error || body?.message || message;
+            }
+        } catch {
+            // Keep the original error message if the response isn't JSON.
+        }
+
+        throw new Error(message);
+    }
+
+    if (!data?.doctor) {
+        throw new Error(data?.error || "The server did not return the doctor record.");
+    }
+
+    return data.doctor;
 }
 
-//Update the doctor Info  
+
+// Update an existing doctor without creating another login.
 export async function updateDoctor(id, updates) {
     const { data, error } = await supabase
         .from("doctors")
@@ -43,14 +60,11 @@ export async function updateDoctor(id, updates) {
     return data;
 }
 
-// Update the doctor status mean what the doctor active or not
 export async function updateDoctorStatus(id, isActive) {
     return updateDoctor(id, { is_active: isActive });
 }
 
-
-
-// Selete and Upload Doctor image
+// Upload a doctor profile photo.
 export async function uploadDoctorImage(file) {
     if (!file) return null;
 
@@ -58,7 +72,13 @@ export async function uploadDoctorImage(file) {
         throw new Error("Please select an image file.");
     }
 
-    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Image size must be 5 MB or less.");
+    }
+
+    const extension =
+        file.name.split(".").pop()?.toLowerCase() || "jpg";
+
     const filePath = `${crypto.randomUUID()}.${extension}`;
 
     const { error } = await supabase.storage

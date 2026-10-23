@@ -7,7 +7,7 @@ const initialStats = {
     appointments: 0,
     pending: 0,
 };
-
+// as
 export default function useAdminDashboard() {
     const [stats, setStats] = useState(initialStats);
     const [loading, setLoading] = useState(true);

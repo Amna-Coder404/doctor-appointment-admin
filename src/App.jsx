@@ -13,6 +13,9 @@ import DoctorsManagement from "./pages/DoctorsManagement";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./components/AdminLayout";
+import AppointmentManagement from "./pages/AppointmentManagement";
+import ResetPassword from "./pages/ResetPassword";
+
 
 export default function App() {
   const { session, profile, loading } = useAuth();
@@ -77,23 +80,21 @@ export default function App() {
           />
 
           {/* Add your appointments page here when available */}
-          {/* 
-                    <Route
-                        path="appointments"
-                        element={<Appointments />}
-                    />
-                    */}
+
           <Route
-            path="/admin/availability"
-            element={
-              <ProtectedRoute
-                session={session}
-                profile={profile}
-                requiredRole="admin"
-              >
-                <DoctorAvailability />
-              </ProtectedRoute>
-            }
+            path="appointments"
+            element={<AppointmentManagement />}
+          />
+
+          <Route path="/admin/availability" element={
+            <ProtectedRoute
+              session={session}
+              profile={profile}
+              requiredRole="admin"
+            >
+              <DoctorAvailability />
+            </ProtectedRoute>
+          }
           />
         </Route>
 
@@ -120,6 +121,7 @@ export default function App() {
           path="*"
           element={<Navigate to={homePath} replace />}
         />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </MantineProvider>
   );
