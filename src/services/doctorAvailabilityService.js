@@ -83,3 +83,18 @@ export async function deleteDoctorAvailability(table, id, doctorId
 
     if (error) throw error;
 }
+
+export async function updateDoctorSchedule(scheduleId, doctorId, schedule) {
+    const { error } = await supabase
+        .from("doctor_availability")
+        .update({
+            day_of_week: Number(schedule.day_of_week),
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+            slot_duration_minutes: Number(schedule.slot_duration_minutes),
+        })
+        .eq("id", scheduleId)
+        .eq("doctor_id", doctorId);
+
+    if (error) throw error;
+}

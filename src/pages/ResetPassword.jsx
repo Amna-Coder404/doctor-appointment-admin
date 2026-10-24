@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.jsx";
+import useAuth from "../hooks/useAuth";
+import ChangePasswordForm from "../components/ChangePasswordForm";
 
 export default function ResetPassword() {
     const navigate = useNavigate();
@@ -12,6 +14,8 @@ export default function ResetPassword() {
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [sessionReady, setSessionReady] = useState(false);
+
+    const { changePassword, logout } = useAuth();
 
     useEffect(() => {
         let active = true;
@@ -66,6 +70,7 @@ export default function ResetPassword() {
         };
     }, []);
 
+
     async function handleSubmit(event) {
         event.preventDefault();
         setError("");
@@ -84,24 +89,23 @@ export default function ResetPassword() {
         setSaving(true);
 
         try {
-            const { data: sessionData, error: sessionError } =
+            const { data, error: sessionError } =
                 await supabase.auth.getSession();
 
             if (sessionError) throw sessionError;
-            if (!sessionData.session) {
-                throw new Error("Your invitation session expired. Request a new invitation.");
+
+            if (!data.session) {
+                throw new Error(
+                    "Your invitation session expired. Request a new invitation."
+                );
             }
 
-            const { error: updateError } = await supabase.auth.updateUser({
-                password,
-            });
-
-            if (updateError) throw updateError;
+            // Reuse the password-update function from useAuth.
+            await changePassword(password);
 
             setMessage("Password set successfully. You can now log in.");
 
-            await supabase.auth.signOut();
-            window.setTimeout(() => navigate("/login"), 1500);
+            await logout();
         } catch (err) {
             setError(err?.message || "Could not set your password.");
         } finally {
@@ -109,54 +113,26 @@ export default function ResetPassword() {
         }
     }
 
+
     if (checking) {
         return <main className="reset-password-page">Verifying invitation...</main>;
     }
 
     return (
         <main className="reset-password-page">
-            <form onSubmit={handleSubmit} className="reset-password-card">
-                <h1>Set your password</h1>
-                <p>Create a password for your doctor account.</p>
-
-                {error && <p role="alert" className="form-error">{error}</p>}
-                {message && <p role="status" className="form-success">{message}</p>}
-
-                {sessionReady ? (
-                    <>
-                        <label htmlFor="password">New password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            autoComplete="new-password"
-                            minLength={8}
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                            required
-                        />
-
-                        <label htmlFor="confirm-password">Confirm password</label>
-                        <input
-                            id="confirm-password"
-                            type="password"
-                            autoComplete="new-password"
-                            minLength={8}
-                            value={confirmPassword}
-                            onChange={(event) => setConfirmPassword(event.target.value)}
-                            required
-                        />
-
-                        <button type="submit" disabled={saving}>
-                            {saving ? "Saving..." : "Set password"}
-                        </button>
-                    </>
-                ) : (
-                    <p>
-                        This link could not be verified. Ask the admin to send a new
-                        invitation after the account has been checked.
-                    </p>
-                )}
-            </form>
+            {error && !sessionReady ? (
+                <p role="alert" className="form-error">{error}</p>
+            ) : sessionReady ? (
+                <ChangePasswordForm
+                    mode="reset"
+                    onSuccess={async () => {
+                        await supabase.auth.signOut();
+                        navigate("/login", { replace: true });
+                    }}
+                />
+            ) : (
+                <p>This invitation link could not be verified.</p>
+            )}
         </main>
     );
 }

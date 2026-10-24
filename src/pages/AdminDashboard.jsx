@@ -15,8 +15,9 @@ import {
     ThemeIcon,
 } from "@mantine/core";
 
-import { Link } from "react-router-dom";
 import useAdminDashboard from "../hooks/useAdminDashboard";
+import ManagementCard from "../components/ManagementCard";
+import ChangePasswordForm from "../components/ChangePasswordForm";
 
 export default function AdminDashboard({ profile }) {
     const {
@@ -126,6 +127,17 @@ export default function AdminDashboard({ profile }) {
                     target="/admin/doctor-availability"
                 />
             </section>
+
+            <section className="section-heading">
+                <div>
+                    <h2>Account security</h2>
+                    <p className="muted">
+                        Keep your admin account secure.
+                    </p>
+                </div>
+            </section>
+
+            <ChangePasswordForm />
         </main>
     );
 }
@@ -159,36 +171,6 @@ function StatCard({ title, value, icon, loading }) {
             <span className="stat-caption">
                 Live data from Supabase{" "}
                 <ArrowUpRight size={14} />
-            </span>
-        </Card>
-    );
-}
-
-function ManagementCard({ icon, title, description, target }) {
-    return (
-        <Card
-            component={Link}
-            to={target}
-            className="management-card"
-            padding="lg"
-            radius="lg"
-            withBorder
-        >
-            <ThemeIcon
-                className="management-icon"
-                size={46}
-                radius="md"
-                variant="light"
-                color="violet"
-            >
-                {icon}
-            </ThemeIcon>
-
-            <h3>{title}</h3>
-            <p>{description}</p>
-
-            <span className="card-link">
-                Open section <ArrowUpRight size={16} />
             </span>
         </Card>
     );

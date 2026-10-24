@@ -2,17 +2,33 @@
 import { supabase } from "../lib/supabase.jsx";
 
 // Get Current User Profile
+
 export const getProfile = async (userId) => {
     const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, email, role")
+        .select("id, full_name, email, phone, avatar_url, role")
         .eq("id", userId)
         .single();
 
     if (error) throw error;
 
-    return data;
+    let doctor = null;
+
+    if (data.role === "doctor") {
+        const { data: doctorData, error: doctorError } = await supabase
+            .from("doctors")
+            .select("id, full_name, specialization, profile_image_url, user_id")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+        if (doctorError) throw doctorError;
+
+        doctor = doctorData;
+    }
+
+    return { ...data, doctor };
 };
+
 
 // Login with Email and Password
 export const loginWithPassword = async (email, password) => {
@@ -62,4 +78,36 @@ export const signOut = async () => {
     const { error } = await supabase.auth.signOut();
 
     if (error) throw error;
+};
+
+
+// Update Password
+
+
+export const updatePassword = async (currentPassword, newPassword) => {
+    const { data, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    const user = data.session?.user;
+
+    if (!user?.email) {
+        throw new Error("Please log in again to change your password.");
+    }
+
+    // Verify the current password by re-authenticating.
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+    });
+
+    if (verifyError) {
+        throw new Error("Your current password is incorrect.");
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+    });
+
+    if (updateError) throw updateError;
 };

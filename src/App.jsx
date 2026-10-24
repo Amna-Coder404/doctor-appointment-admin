@@ -5,17 +5,18 @@ import "@mantine/core/styles.css";
 import "./App.css";
 
 import useAuth from "./hooks/useAuth";
-import DoctorAvailability from "./pages/DoctorAvailability";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorsManagement from "./pages/DoctorsManagement";
-
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminLayout from "./components/AdminLayout";
+import DoctorAvailability from "./pages/DoctorAvailability";
+import MyAvailability from "./pages/MyAvailability";
 import AppointmentManagement from "./pages/AppointmentManagement";
 import ResetPassword from "./pages/ResetPassword";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/AdminLayout";
+import DoctorLayout from "./components/DoctorLayout";
 
 export default function App() {
   const { session, profile, loading } = useAuth();
@@ -54,7 +55,7 @@ export default function App() {
           }
         />
 
-        {/* Admin routes share one sidebar */}
+        {/* Admin routes share one layout and sidebar */}
         <Route
           path="/admin"
           element={
@@ -69,47 +70,48 @@ export default function App() {
         >
           <Route
             path="dashboard"
-            element={
-              <AdminDashboard profile={profile} />
-            }
+            element={<AdminDashboard profile={profile} />}
           />
-
           <Route
             path="doctors"
             element={<DoctorsManagement />}
           />
-
-          {/* Add your appointments page here when available */}
-
           <Route
             path="appointments"
             element={<AppointmentManagement />}
           />
-
-          <Route path="/admin/availability" element={
-            <ProtectedRoute
-              session={session}
-              profile={profile}
-              requiredRole="admin"
-            >
-              <DoctorAvailability />
-            </ProtectedRoute>
-          }
+          <Route
+            path="availability"
+            element={<DoctorAvailability />}
           />
         </Route>
 
-        {/* Doctor routes */}
+        {/* Doctor routes share one layout and sidebar */}
         <Route
-          path="/doctor/dashboard"
+          path="/doctor"
           element={
             <ProtectedRoute
               session={session}
               profile={profile}
               requiredRole="doctor"
             >
-              <DoctorDashboard profile={profile} />
+              <DoctorLayout profile={profile} />
             </ProtectedRoute>
           }
+        >
+          <Route
+            path="dashboard"
+            element={<DoctorDashboard profile={profile} />}
+          />
+          <Route
+            path="availability"
+            element={<MyAvailability profile={profile} />}
+          />
+        </Route>
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
         />
 
         <Route
@@ -121,7 +123,6 @@ export default function App() {
           path="*"
           element={<Navigate to={homePath} replace />}
         />
-        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </MantineProvider>
   );

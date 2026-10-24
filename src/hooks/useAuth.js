@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.jsx";
 
-import { getCurrentSession, getProfile, signOut, } from "../services/authService";
+import { getCurrentSession, getProfile, signOut, updatePassword, } from "../services/authService";
 
 const useAuth = () => {
     const [session, setSession] = useState(null);
@@ -83,9 +83,7 @@ const useAuth = () => {
 
         initialize();
 
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, newSession) => {
+        const { data: { subscription }, } = supabase.auth.onAuthStateChange((_event, newSession) => {
             if (!active) return;
 
             setSession(newSession);
@@ -130,12 +128,17 @@ const useAuth = () => {
         }
     };
 
+    // Change Password
+    const changePassword = async (currentPassword, newPassword) => {
+        await updatePassword(currentPassword, newPassword);
+    };
     return {
         session,
         profile,
         loading,
         refreshProfile,
         logout,
+        changePassword
     };
 };
 

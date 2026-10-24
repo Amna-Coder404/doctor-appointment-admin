@@ -64,6 +64,42 @@ export async function updateDoctorStatus(id, isActive) {
     return updateDoctor(id, { is_active: isActive });
 }
 
+// Doctor kud apni info edit kary ga
+export async function updateMyDoctorProfile(userId, updates) {
+    const allowedFields = [
+        "full_name",
+        "phone",
+        "specialization",
+        "qualification",
+        "experience_years",
+        "consultation_fee",
+        "bio",
+        "clinic_name",
+        "clinic_address",
+        "profile_image_url",
+    ];
+
+    const safeUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([key]) =>
+            allowedFields.includes(key)
+        )
+    );
+
+    const { data, error } = await supabase
+        .from("doctors")
+        .update({
+            ...safeUpdates,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}
+
 // Upload a doctor profile photo.
 export async function uploadDoctorImage(file) {
     if (!file) return null;
@@ -91,9 +127,7 @@ export async function uploadDoctorImage(file) {
 
     if (error) throw error;
 
-    const { data } = supabase.storage
-        .from("doctor-photos")
-        .getPublicUrl(filePath);
+    const { data } = supabase.storage.from("doctor-photos").getPublicUrl(filePath);
 
     return data.publicUrl;
 }

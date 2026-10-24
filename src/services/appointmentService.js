@@ -2,16 +2,9 @@
 import { supabase } from "../lib/supabase.jsx";
 
 export async function completeDoctorAppointment(appointmentId) {
-    const { error } = await supabase.rpc(
-        "doctor_complete_appointment",
-        {
-            p_appointment_id: appointmentId,
-        }
-    );
-
-    if (error) throw error;
+    return updateDoctorAppointmentStatus(appointmentId, "completed");
 }
-// Get All Appointments
+
 export async function getAppointments() {
     const { data, error } = await supabase
         .from("appointments")
@@ -38,11 +31,10 @@ export async function getAppointments() {
         .order("starts_at", { ascending: false });
 
     if (error) throw error;
-
     return data ?? [];
 }
 
-// FOr update AppointMent Status 
+// Existing admin operation. Keep admin access restricted by RLS.
 export async function updateAppointmentStatus(id, status) {
     const allowedStatuses = ["confirmed", "cancelled", "completed"];
 
@@ -58,6 +50,54 @@ export async function updateAppointmentStatus(id, status) {
         .single();
 
     if (error) throw error;
-
     return data;
+}
+
+export async function getDoctorProfile(userId) {
+    const { data, error } = await supabase
+        .from("doctors")
+        .select("id, full_name, specialization, profile_image_url")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getDoctorAppointments(doctorId) {
+    const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+            id,
+            patient_id,
+            doctor_id,
+            starts_at,
+            ends_at,
+            status,
+            consultation_fee,
+            payment_status,
+            patient_notes,
+            created_at,
+            patient:profiles!appointments_patient_id_fkey (
+                full_name,
+                email
+            )
+        `)
+        .eq("doctor_id", doctorId)
+        .order("starts_at", { ascending: true });
+
+    if (error) throw error;
+    return data ?? [];
+}
+
+export async function updateDoctorAppointmentStatus(appointmentId, status) {
+    const { error } = await supabase.rpc(
+        "doctor_update_appointment_status",
+        {
+            p_appointment_id: appointmentId,
+            p_status: status,
+        }
+    );
+
+    if (error) throw error;
 }

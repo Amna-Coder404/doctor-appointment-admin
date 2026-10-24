@@ -1,303 +1,343 @@
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
-    Activity,
-    CalendarDays,
-    Clock3,
-    LogOut,
-    Stethoscope,
+    Alert,
+    Avatar,
+    Button,
+    FileInput,
+    Grid,
+    Group,
+    Paper,
+    Stack,
+    Text,
+    TextInput,
+    Textarea,
+    Title,
+} from "@mantine/core";
+import {
     CheckCircle2,
-    RefreshCw,
-} from 'lucide-react'
-import { supabase } from '../lib/supabase.jsx'
+    ImagePlus,
+    UserRound,
+} from "lucide-react";
 
-export default function DoctorDashboard({ profile }) {
-    const [doctor, setDoctor] = useState(null)
-    const [appointments, setAppointments] = useState([])
-    const [appointmentCount, setAppointmentCount] = useState(0)
-    const [pendingCount, setPendingCount] = useState(0)
-    const [loading, setLoading] = useState(true)
-    const [completingId, setCompletingId] = useState(null)
-    const [error, setError] = useState('')
-    const [success, setSuccess] = useState('')
+import useAuth from "../hooks/useAuth";
+import {
+    updateMyDoctorProfile,
+    uploadDoctorImage,
+} from "../services/doctorService";
+import ChangePasswordForm from "../components/ChangePasswordForm";
 
-    const loadDoctorData = useCallback(async () => {
-        setLoading(true)
-        setError('')
+export default function DoctorProfileSettings({ doctor, onUpdated }) {
+    const { profile } = useAuth();
 
-        try {
-            const { data: doctorData, error: doctorError } = await supabase
-                .from('doctors')
-                .select('id, full_name, specialization, profile_image_url')
-                .eq('user_id', profile.id)
-                .maybeSingle()
+    const [form, setForm] = useState({
+        full_name: "",
+        phone: "",
+        specialization: "",
+        qualification: "",
+        bio: "",
+        clinic_name: "",
+        clinic_address: "",
+    });
 
-            if (doctorError) throw doctorError
+    const [originalForm, setOriginalForm] = useState(null);
+    const [originalImage, setOriginalImage] = useState("");
+    const [image, setImage] = useState(null);
+    const [preview, setPreview] = useState("");
 
-            if (!doctorData) {
-                setDoctor(null)
-                setError(
-                    'Your login is not linked to a doctor profile yet. Please contact the administrator.'
-                )
-                return
-            }
-
-            setDoctor(doctorData)
-
-            const [
-                allAppointments,
-                pendingAppointments,
-                appointmentList,
-            ] = await Promise.all([
-                supabase
-                    .from('appointments')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('doctor_id', doctorData.id),
-
-                supabase
-                    .from('appointments')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('doctor_id', doctorData.id)
-                    .eq('status', 'pending'),
-
-                supabase
-                    .from('appointments')
-                    .select('*')
-                    .eq('doctor_id', doctorData.id)
-                    .order('created_at', { ascending: false }),
-            ])
-
-            if (allAppointments.error) throw allAppointments.error
-            if (pendingAppointments.error) throw pendingAppointments.error
-            if (appointmentList.error) throw appointmentList.error
-
-            setAppointmentCount(allAppointments.count ?? 0)
-            setPendingCount(pendingAppointments.count ?? 0)
-            setAppointments(appointmentList.data ?? [])
-        } catch (err) {
-            setError(err.message || 'Failed to load your dashboard.')
-        } finally {
-            setLoading(false)
-        }
-    }, [profile.id])
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     useEffect(() => {
-        loadDoctorData()
-    }, [loadDoctorData])
+        if (!doctor) return;
 
-    async function handleCompleteAppointment(appointmentId) {
-        setError('')
-        setSuccess('')
-        setCompletingId(appointmentId)
+        const initialForm = {
+            full_name: doctor.full_name || "",
+            phone: doctor.phone || "",
+            specialization: doctor.specialization || "",
+            qualification: doctor.qualification || "",
+            bio: doctor.bio || "",
+            clinic_name: doctor.clinic_name || "",
+            clinic_address: doctor.clinic_address || "",
+        };
+
+        const initialImage = doctor.profile_image_url || "";
+
+        setForm(initialForm);
+        setOriginalForm(initialForm);
+        setPreview(initialImage);
+        setOriginalImage(initialImage);
+        setImage(null);
+    }, [doctor]);
+
+    useEffect(() => {
+        if (!image) return;
+
+        const objectUrl = URL.createObjectURL(image);
+        setPreview(objectUrl);
+
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [image]);
+
+    function handleChange(field, value) {
+        setForm((current) => ({
+            ...current,
+            [field]: value,
+        }));
+    }
+
+    function handleCancel() {
+        if (originalForm) {
+            setForm({ ...originalForm });
+        }
+
+        setImage(null);
+        setPreview(originalImage);
+        setError("");
+        setSuccess("");
+    }
+
+    async function handleSave(event) {
+        event.preventDefault();
+
+        setError("");
+        setSuccess("");
+        setSaving(true);
 
         try {
-            const { error: completeError } = await supabase.rpc(
-                'doctor_complete_appointment',
-                { p_appointment_id: appointmentId }
-            )
+            if (!profile?.id || doctor?.user_id !== profile.id) {
+                throw new Error(
+                    "Your doctor account could not be verified."
+                );
+            }
 
-            if (completeError) throw completeError
+            const updates = { ...form };
 
-            setSuccess('Appointment marked as completed.')
-            await loadDoctorData()
+            if (image) {
+                updates.profile_image_url =
+                    await uploadDoctorImage(image);
+            }
+
+            const updatedDoctor = await updateMyDoctorProfile(
+                profile.id,
+                updates
+            );
+
+            setImage(null);
+            setSuccess(
+                "Your profile has been updated successfully."
+            );
+
+            await onUpdated?.(updatedDoctor);
         } catch (err) {
-            setError(err.message || 'Could not complete the appointment.')
+            setError(
+                err.message || "Could not update your profile."
+            );
         } finally {
-            setCompletingId(null)
+            setSaving(false);
         }
     }
 
-    async function logout() {
-        await supabase.auth.signOut()
-    }
-
-    function formatDate(value) {
-        if (!value) return 'Date not provided'
-
-        return new Date(value).toLocaleString(undefined, {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-        })
+    if (!doctor) {
+        return <Text>Loading doctor profile...</Text>;
     }
 
     return (
-        <div className="dashboard-shell">
-            <aside className="sidebar">
-                <div className="sidebar-brand">
-                    <Activity size={25} />
-                    <span>MediBook</span>
-                </div>
+        <Stack gap="xl">
+            <div>
+                <Title order={2}>My Profile</Title>
+                <Text c="dimmed" size="sm" mt={4}>
+                    Manage your professional information and account
+                    security.
+                </Text>
+            </div>
 
-                <p className="sidebar-label">DOCTOR WORKSPACE</p>
+            {error && (
+                <Alert color="red" title="Something went wrong">
+                    {error}
+                </Alert>
+            )}
 
-                <div className="sidebar-link active">
-                    <Activity size={18} /> Dashboard
-                </div>
-
-                <a className="sidebar-link" href="#my-appointments">
-                    <CalendarDays size={18} /> My appointments
-                </a>
-
-                <div className="sidebar-bottom">
-                    <div className="user-mini">
-                        <div className="avatar">
-                            {(profile.full_name || 'D').charAt(0).toUpperCase()}
-                        </div>
-                        <div className="user-mini-text">
-                            <strong>{profile.full_name || 'Doctor'}</strong>
-                            <span>Doctor account</span>
-                        </div>
-                    </div>
-
-                    <button className="logout-button" onClick={logout}>
-                        <LogOut size={18} /> Sign out
-                    </button>
-                </div>
-            </aside>
-
-            <main className="dashboard-main">
-                <header className="dashboard-header">
-                    <div>
-                        <p className="eyebrow">DOCTOR WORKSPACE</p>
-                        <h1>My dashboard</h1>
-                        <p className="muted">
-                            Welcome back, Dr. {profile.full_name || 'Doctor'}.
-                        </p>
-                    </div>
-
-                    <div className="admin-chip">
-                        <span className="online-dot" />
-                        Doctor access
-                    </div>
-                </header>
-
-                {error && (
-                    <div className="error-message" role="alert">
-                        {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div className="success-message" role="status">
-                        {success}
-                    </div>
-                )}
-
-                {doctor && (
-                    <section className="welcome-banner doctor-banner">
-                        <div>
-                            <p>YOUR PROFILE</p>
-                            <h2>{doctor.full_name}</h2>
-                            <span>{doctor.specialization}</span>
-                        </div>
-                        <Stethoscope size={50} strokeWidth={1.3} />
-                    </section>
-                )}
-
-                <section className="stats-grid">
-                    <article className="stat-card">
-                        <div className="stat-icon">
-                            <CalendarDays />
-                        </div>
-                        <p>My appointments</p>
-                        <h3>{loading ? '—' : appointmentCount}</h3>
-                        <span className="stat-caption">
-                            Your booking records
-                        </span>
-                    </article>
-
-                    <article className="stat-card">
-                        <div className="stat-icon">
-                            <Clock3 />
-                        </div>
-                        <p>Pending bookings</p>
-                        <h3>{loading ? '—' : pendingCount}</h3>
-                        <span className="stat-caption">
-                            Awaiting review
-                        </span>
-                    </article>
-                </section>
-
-                <section
-                    className="management-card doctor-info-card"
-                    id="my-appointments"
+            {success && (
+                <Alert
+                    color="teal"
+                    title="Success"
+                    icon={<CheckCircle2 size={18} />}
                 >
-                    <div className="appointments-heading">
-                        <div>
-                            <h3>My appointments</h3>
-                            <p className="muted">
-                                View bookings assigned to your doctor profile.
-                            </p>
-                        </div>
+                    {success}
+                </Alert>
+            )}
 
-                        <button
-                            type="button"
-                            className="refresh-button"
-                            onClick={loadDoctorData}
-                            disabled={loading}
-                        >
-                            <RefreshCw size={16} />
-                            Refresh
-                        </button>
-                    </div>
+            <Paper
+                withBorder
+                radius="lg"
+                p={{ base: "md", sm: "xl" }}
+            >
+                <form onSubmit={handleSave}>
+                    <Stack gap="lg">
+                        <Group gap="md" align="center">
+                            <Avatar
+                                src={preview || null}
+                                size={88}
+                                radius="xl"
+                                color="teal"
+                            >
+                                <UserRound size={36} />
+                            </Avatar>
 
-                    {loading ? (
-                        <p>Loading appointments...</p>
-                    ) : appointments.length === 0 ? (
-                        <p>No appointments found.</p>
-                    ) : (
-                        <div className="appointments-list">
-                            {appointments.map((appointment) => (
-                                <article
-                                    className="appointment-item"
-                                    key={appointment.id}
-                                >
-                                    <div className="appointment-details">
-                                        <strong>
-                                            Appointment #{String(
-                                                appointment.id
-                                            ).slice(0, 8)}
-                                        </strong>
+                            <Stack gap={4}>
+                                <Title order={4}>
+                                    Professional profile
+                                </Title>
+                                <Text c="dimmed" size="sm">
+                                    This information helps patients
+                                    identify you.
+                                </Text>
+                            </Stack>
+                        </Group>
 
-                                        <span>
-                                            {formatDate(
-                                                appointment.appointment_date ||
-                                                appointment.scheduled_at ||
-                                                appointment.created_at
-                                            )}
-                                        </span>
+                        <FileInput
+                            label="Profile image"
+                            placeholder="Choose an image"
+                            leftSection={<ImagePlus size={18} />}
+                            accept="image/png,image/jpeg,image/webp"
+                            value={image}
+                            onChange={(file) => {
+                                setImage(file);
+                                setError("");
+                                setSuccess("");
+                            }}
+                            clearable
+                            description="PNG, JPG or WebP. Maximum 5 MB."
+                        />
 
-                                        <span>
-                                            Status:{' '}
-                                            {appointment.status || 'Unknown'}
-                                        </span>
-                                    </div>
+                        <Grid>
+                            <Grid.Col span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label="Full name"
+                                    value={form.full_name}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "full_name",
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                    required
+                                />
+                            </Grid.Col>
 
-                                    {appointment.status === 'confirmed' && (
-                                        <button
-                                            type="button"
-                                            className="complete-button"
-                                            disabled={
-                                                completingId !== null
-                                            }
-                                            onClick={() =>
-                                                handleCompleteAppointment(
-                                                    appointment.id
-                                                )
-                                            }
-                                        >
-                                            <CheckCircle2 size={16} />
-                                            {completingId === appointment.id
-                                                ? 'Completing...'
-                                                : 'Complete'}
-                                        </button>
-                                    )}
-                                </article>
-                            ))}
-                        </div>
-                    )}
-                </section>
-            </main>
-        </div>
-    )
+                            <Grid.Col span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label="Phone number"
+                                    placeholder="03XXXXXXXXX"
+                                    value={form.phone}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "phone",
+                                            event.currentTarget.value
+                                                .replace(/\D/g, "")
+                                                .slice(0, 11)
+                                        )
+                                    }
+                                    maxLength={11}
+                                    inputMode="numeric"
+                                />
+                            </Grid.Col>
+
+                            <Grid.Col span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label="Specialization"
+                                    value={form.specialization}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "specialization",
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                    required
+                                />
+                            </Grid.Col>
+
+                            <Grid.Col span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label="Qualification"
+                                    value={form.qualification}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "qualification",
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                />
+                            </Grid.Col>
+
+                            <Grid.Col span={12}>
+                                <Textarea
+                                    label="Professional bio"
+                                    placeholder="Describe your experience and expertise"
+                                    value={form.bio}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "bio",
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                    minRows={3}
+                                    autosize
+                                />
+                            </Grid.Col>
+
+                            <Grid.Col span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label="Clinic name"
+                                    value={form.clinic_name}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "clinic_name",
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                />
+                            </Grid.Col>
+
+                            <Grid.Col span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label="Clinic address"
+                                    value={form.clinic_address}
+                                    onChange={(event) =>
+                                        handleChange(
+                                            "clinic_address",
+                                            event.currentTarget.value
+                                        )
+                                    }
+                                />
+                            </Grid.Col>
+                        </Grid>
+
+                        <Group justify="flex-end" mt="md">
+                            <Button
+                                type="button"
+                                variant="default"
+                                onClick={handleCancel}
+                                disabled={saving}
+                            >
+                                Cancel
+                            </Button>
+
+                            <Button
+                                type="submit"
+                                loading={saving}
+                                color="teal"
+                            >
+                                Save changes
+                            </Button>
+                        </Group>
+                    </Stack>
+                </form>
+            </Paper>
+
+            <ChangePasswordForm />
+        </Stack>
+    );
 }
