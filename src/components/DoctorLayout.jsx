@@ -99,7 +99,6 @@ export default function DoctorLayout({ profile }) {
                 </nav>
 
                 <div className="sidebar-bottom">
-
                     <div className="user-mini">
                         <div className="avatar">
                             {profile?.doctor?.profile_image_url ? (

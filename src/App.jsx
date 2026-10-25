@@ -22,16 +22,7 @@ export default function App() {
   const { session, profile, loading } = useAuth();
   const role = profile?.role;
 
-  if (loading) {
-    return (
-      <MantineProvider>
-        <div className="loading-screen">
-          <div className="loader" />
-          <p>Loading your workspace...</p>
-        </div>
-      </MantineProvider>
-    );
-  }
+
 
   const homePath = !session
     ? "/login"

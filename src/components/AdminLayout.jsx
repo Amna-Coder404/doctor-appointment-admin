@@ -18,12 +18,13 @@ export default function AdminLayout({ profile }) {
     const location = useLocation();
 
     const closeSidebar = () => setSidebarOpen(false);
+    const doctor = profile?.doctor;
 
     const handleLogout = async () => {
         closeSidebar();
         await logout();
     };
-
+    console.log("", profile)
     return (
         <div className="dashboard-shell">
             {/* Mobile and tablet header */}
@@ -121,13 +122,25 @@ export default function AdminLayout({ profile }) {
 
                 {/* Profile and logout */}
                 <div className="sidebar-bottom">
+
                     <div className="user-mini">
                         <div className="avatar">
-                            {(profile?.full_name || "A")
-                                .charAt(0)
-                                .toUpperCase()}
+                            {profile?.doctor?.profile_image_url ||
+                                profile?.avatar_url ? (
+                                <img
+                                    src={
+                                        profile?.doctor?.profile_image_url ||
+                                        profile?.avatar_url
+                                    }
+                                    alt="Profile"
+                                    className="avatar-image"
+                                />
+                            ) : (
+                                (profile?.full_name || profile?.email || "A")
+                                    .charAt(0)
+                                    .toUpperCase()
+                            )}
                         </div>
-
                         <div className="user-mini-text">
                             <strong>
                                 {profile?.full_name || "Administrator"}

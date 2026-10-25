@@ -142,7 +142,6 @@ export default function DoctorProfileSettings({ doctor, onUpdated }) {
     if (!doctor) {
         return <Text>Loading doctor profile...</Text>;
     }
-
     return (
         <Stack gap="xl">
             <div>

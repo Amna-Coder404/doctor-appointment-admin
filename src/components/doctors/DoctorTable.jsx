@@ -8,9 +8,7 @@ export default function DoctorTable({
     onToggleStatus,
 }) {
 
-    if (loading) {
-        return <div className="doctor-message">Loading doctors...</div>;
-    }
+
 
     if (!doctors.length) {
         return (

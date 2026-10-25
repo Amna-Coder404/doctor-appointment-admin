@@ -1,21 +1,25 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    ArrowLeft,
+    HeartPulse,
+    LockKeyhole,
+    ShieldCheck,
+    Stethoscope,
+} from "lucide-react";
+import { Button, Loader } from "@mantine/core";
+
 import { supabase } from "../lib/supabase.jsx";
-import useAuth from "../hooks/useAuth";
 import ChangePasswordForm from "../components/ChangePasswordForm";
+import "../styles/ResetPassword.css";
 
 export default function ResetPassword() {
     const navigate = useNavigate();
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [checking, setChecking] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
-    const [sessionReady, setSessionReady] = useState(false);
 
-    const { changePassword, logout } = useAuth();
+    const [checking, setChecking] = useState(true);
+    const [error, setError] = useState("");
+    const [sessionReady, setSessionReady] = useState(false);
 
     useEffect(() => {
         let active = true;
@@ -27,10 +31,11 @@ export default function ResetPassword() {
                 const type = params.get("type");
 
                 if (tokenHash && (type === "invite" || type === "recovery")) {
-                    const { error: verifyError } = await supabase.auth.verifyOtp({
-                        token_hash: tokenHash,
-                        type,
-                    });
+                    const { error: verifyError } =
+                        await supabase.auth.verifyOtp({
+                            token_hash: tokenHash,
+                            type,
+                        });
 
                     if (verifyError) throw verifyError;
                 }
@@ -46,17 +51,23 @@ export default function ResetPassword() {
                     );
                 }
 
-                // Remove authentication tokens from the visible URL after verification.
                 window.history.replaceState(
                     {},
                     document.title,
                     window.location.pathname
                 );
 
-                if (active) setSessionReady(true);
+                if (active) {
+                    setSessionReady(true);
+                    setError("");
+                }
             } catch (err) {
                 if (active) {
-                    setError(err?.message || "Could not verify this invitation.");
+                    setError(
+                        err?.message ||
+                        "Could not verify your invitation."
+                    );
+                    setSessionReady(false);
                 }
             } finally {
                 if (active) setChecking(false);
@@ -70,69 +81,162 @@ export default function ResetPassword() {
         };
     }, []);
 
-
-    async function handleSubmit(event) {
-        event.preventDefault();
-        setError("");
-        setMessage("");
-
-        if (password.length < 8) {
-            setError("Password must be at least 8 characters.");
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setError("Passwords do not match.");
-            return;
-        }
-
-        setSaving(true);
-
-        try {
-            const { data, error: sessionError } =
-                await supabase.auth.getSession();
-
-            if (sessionError) throw sessionError;
-
-            if (!data.session) {
-                throw new Error(
-                    "Your invitation session expired. Request a new invitation."
-                );
-            }
-
-            // Reuse the password-update function from useAuth.
-            await changePassword(password);
-
-            setMessage("Password set successfully. You can now log in.");
-
-            await logout();
-        } catch (err) {
-            setError(err?.message || "Could not set your password.");
-        } finally {
-            setSaving(false);
-        }
-    }
-
-
-    if (checking) {
-        return <main className="reset-password-page">Verifying invitation...</main>;
+    async function handleSuccess() {
+        await supabase.auth.signOut();
+        navigate("/login", { replace: true });
     }
 
     return (
-        <main className="reset-password-page">
-            {error && !sessionReady ? (
-                <p role="alert" className="form-error">{error}</p>
-            ) : sessionReady ? (
-                <ChangePasswordForm
-                    mode="reset"
-                    onSuccess={async () => {
-                        await supabase.auth.signOut();
-                        navigate("/login", { replace: true });
-                    }}
-                />
-            ) : (
-                <p>This invitation link could not be verified.</p>
-            )}
+        <main className="reset-page">
+            <div className="reset-background reset-background-one" />
+            <div className="reset-background reset-background-two" />
+
+            <header className="reset-topbar">
+                <button
+                    type="button"
+                    className="reset-brand"
+                    onClick={() => navigate("/login")}
+                    aria-label="MediBook login"
+                >
+                    <span className="reset-brand-icon">
+                        <HeartPulse size={23} />
+                    </span>
+
+                    <span>
+                        <strong>MediBook</strong>
+                        <small>Healthcare management</small>
+                    </span>
+                </button>
+
+                <div className="reset-secure-label">
+                    <ShieldCheck size={17} />
+                    <span>Secure account setup</span>
+                </div>
+            </header>
+
+            <section className="reset-content">
+                <div className="reset-intro">
+                    <div className="reset-icon">
+                        <LockKeyhole size={27} />
+                    </div>
+
+                    <p className="reset-eyebrow">
+                        DOCTOR ACCOUNT SECURITY
+                    </p>
+
+                    <h1>
+                        Your account,
+                        <br />
+                        <span>your security.</span>
+                    </h1>
+
+                    <p className="reset-description">
+                        Create a secure password to access your MediBook
+                        doctor dashboard and manage your appointments.
+                    </p>
+
+                    <div className="reset-benefits">
+                        <div className="reset-benefit">
+                            <span className="reset-benefit-icon">
+                                <ShieldCheck size={19} />
+                            </span>
+                            <div>
+                                <strong>Secure access</strong>
+                                <p>Protect your professional account.</p>
+                            </div>
+                        </div>
+
+                        <div className="reset-benefit">
+                            <span className="reset-benefit-icon">
+                                <Stethoscope size={19} />
+                            </span>
+                            <div>
+                                <strong>Doctor workspace</strong>
+                                <p>Manage your clinic activities in one place.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="reset-panel">
+                    {checking ? (
+                        <div className="reset-status">
+                            <span className="reset-status-icon">
+                                <Loader color="teal" size="lg" />
+                            </span>
+                            <h2>Verifying your invitation</h2>
+                            <p>
+                                Please wait while we securely verify your
+                                invitation link.
+                            </p>
+                        </div>
+                    ) : sessionReady ? (
+                        <div className="reset-form-wrapper">
+                            <div className="reset-panel-heading">
+                                <span className="reset-panel-icon">
+                                    <LockKeyhole size={21} />
+                                </span>
+
+                                <div>
+                                    <h2>Set your password</h2>
+                                    <p>
+                                        Choose a strong password for your account.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="reset-form">
+                                <ChangePasswordForm
+                                    mode="reset"
+                                    onSuccess={handleSuccess}
+                                />
+                            </div>
+
+                            <div className="reset-security-note">
+                                <ShieldCheck size={17} />
+                                <span>
+                                    Use at least 8 characters for your password.
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="reset-status reset-error-state">
+                            <span className="reset-status-icon">
+                                <ShieldCheck size={27} />
+                            </span>
+
+                            <h2>Invitation unavailable</h2>
+
+                            <p>
+                                {error ||
+                                    "We could not verify this invitation."}
+                            </p>
+
+                            <p>
+                                Ask your administrator to check your doctor
+                                account and send a new invitation.
+                            </p>
+
+                            <Button
+                                color="teal"
+                                radius="md"
+                                leftSection={<ArrowLeft size={16} />}
+                                onClick={() => navigate("/login")}
+                            >
+                                Back to login
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            <footer className="reset-footer">
+                <span>
+                    <ShieldCheck size={15} />
+                    Your account security matters
+                </span>
+                <span>© {new Date().getFullYear()} MediBook</span>
+            </footer>
         </main>
     );
 }
