@@ -1,10 +1,6 @@
 
 import { supabase } from "../lib/supabase.jsx";
 
-export async function completeDoctorAppointment(appointmentId) {
-    return updateDoctorAppointmentStatus(appointmentId, "completed");
-}
-
 export async function getAppointments() {
     const { data, error } = await supabase
         .from("appointments")
@@ -31,10 +27,10 @@ export async function getAppointments() {
         .order("starts_at", { ascending: false });
 
     if (error) throw error;
+
     return data ?? [];
 }
 
-// Existing admin operation. Keep admin access restricted by RLS.
 export async function updateAppointmentStatus(id, status) {
     const allowedStatuses = ["confirmed", "cancelled", "completed"];
 
@@ -50,6 +46,7 @@ export async function updateAppointmentStatus(id, status) {
         .single();
 
     if (error) throw error;
+
     return data;
 }
 
@@ -61,8 +58,10 @@ export async function getDoctorProfile(userId) {
         .maybeSingle();
 
     if (error) throw error;
+
     return data;
 }
+
 
 export async function getDoctorAppointments(doctorId) {
     const { data, error } = await supabase
@@ -79,6 +78,7 @@ export async function getDoctorAppointments(doctorId) {
             patient_notes,
             created_at,
             patient:profiles!appointments_patient_id_fkey (
+                id,
                 full_name,
                 email
             )
@@ -86,11 +86,24 @@ export async function getDoctorAppointments(doctorId) {
         .eq("doctor_id", doctorId)
         .order("starts_at", { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+        console.error("Doctor appointments query error:", error);
+        throw error;
+    }
+
+
+
     return data ?? [];
 }
 
+
 export async function updateDoctorAppointmentStatus(appointmentId, status) {
+    const allowedStatuses = ["confirmed", "cancelled", "completed"];
+
+    if (!allowedStatuses.includes(status)) {
+        throw new Error("Invalid appointment status.");
+    }
+
     const { error } = await supabase.rpc(
         "doctor_update_appointment_status",
         {
@@ -100,4 +113,8 @@ export async function updateDoctorAppointmentStatus(appointmentId, status) {
     );
 
     if (error) throw error;
+}
+
+export async function completeDoctorAppointment(appointmentId) {
+    return updateDoctorAppointmentStatus(appointmentId, "completed");
 }

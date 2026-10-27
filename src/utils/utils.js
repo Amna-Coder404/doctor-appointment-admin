@@ -24,3 +24,15 @@ export function formatDateTime(value) {
 }
 
 
+export function formatDate(value) {
+    return new Date(value).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    });
+}
+
+
+export function formatStatus(status) {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+}

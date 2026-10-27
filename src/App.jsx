@@ -5,6 +5,7 @@ import "@mantine/core/styles.css";
 import "./App.css";
 
 import useAuth from "./hooks/useAuth";
+
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
@@ -20,9 +21,12 @@ import DoctorLayout from "./components/DoctorLayout";
 
 export default function App() {
   const { session, profile, loading } = useAuth();
+
   const role = profile?.role;
 
-
+  if (loading) {
+    return <div className="app-loading">Loading...</div>;
+  }
 
   const homePath = !session
     ? "/login"
@@ -46,7 +50,7 @@ export default function App() {
           }
         />
 
-        {/* Admin routes share one layout and sidebar */}
+        {/* Admin routes */}
         <Route
           path="/admin"
           element={
@@ -63,21 +67,28 @@ export default function App() {
             path="dashboard"
             element={<AdminDashboard profile={profile} />}
           />
+
           <Route
             path="doctors"
             element={<DoctorsManagement />}
           />
+
           <Route
             path="appointments"
-            element={<AppointmentManagement />}
+            element={
+              <AppointmentManagement
+                role="admin"
+              />
+            }
           />
+
           <Route
             path="availability"
             element={<DoctorAvailability />}
           />
         </Route>
 
-        {/* Doctor routes share one layout and sidebar */}
+        {/* Doctor routes */}
         <Route
           path="/doctor"
           element={
@@ -94,6 +105,17 @@ export default function App() {
             path="dashboard"
             element={<DoctorDashboard profile={profile} />}
           />
+
+          <Route
+            path="appointments"
+            element={
+              <AppointmentManagement
+                role="doctor"
+                userId={profile?.id}
+              />
+            }
+          />
+
           <Route
             path="availability"
             element={<MyAvailability profile={profile} />}

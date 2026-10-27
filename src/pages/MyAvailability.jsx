@@ -13,7 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import useMyAvailability from "../hooks/useMyAvailability";
-import { formatDateTime, DAYS, formatTime } from "../utils/utils";
+import { formatDateTime, formatStatus, formatTime, DAYS } from "../utils/utils";
 
 import "../styles/MyAvailability.css";
 

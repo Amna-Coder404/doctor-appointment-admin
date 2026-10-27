@@ -17,8 +17,6 @@ export default function DoctorLayout({ profile }) {
 
     const doctor = profile?.doctor;
 
-
-
     const closeSidebar = () => setSidebarOpen(false);
 
     const handleLogout = async () => {
@@ -38,6 +36,7 @@ export default function DoctorLayout({ profile }) {
                 >
                     <Menu size={23} />
                 </button>
+
                 <span className="mobile-brand">MediBook Doctor</span>
             </header>
 
@@ -84,7 +83,16 @@ export default function DoctorLayout({ profile }) {
                         <span>Dashboard</span>
                     </NavLink>
 
-
+                    <NavLink
+                        to="/doctor/appointments"
+                        onClick={closeSidebar}
+                        className={({ isActive }) =>
+                            `sidebar-link ${isActive ? "active" : ""}`
+                        }
+                    >
+                        <CalendarDays size={18} />
+                        <span>Appointments</span>
+                    </NavLink>
 
                     <NavLink
                         to="/doctor/availability"
@@ -101,15 +109,17 @@ export default function DoctorLayout({ profile }) {
                 <div className="sidebar-bottom">
                     <div className="user-mini">
                         <div className="avatar">
-                            {profile?.doctor?.profile_image_url ? (
+                            {doctor?.profile_image_url ? (
                                 <img
-                                    src={profile.doctor.profile_image_url}
-                                    alt={profile.doctor.full_name}
+                                    src={doctor.profile_image_url}
+                                    alt={doctor.full_name || "Doctor"}
                                     className="avatar-image"
-                                    onError={(e) => console.error("Doctor image failed to load:", e.currentTarget.src)}
+                                    onError={(event) => {
+                                        event.currentTarget.style.display = "none";
+                                    }}
                                 />
                             ) : (
-                                (profile?.doctor?.full_name || profile?.full_name || "D")
+                                (doctor?.full_name || profile?.full_name || "D")
                                     .charAt(0)
                                     .toUpperCase()
                             )}
@@ -117,8 +127,11 @@ export default function DoctorLayout({ profile }) {
 
                         <div className="user-mini-text">
                             <strong>
-                                {doctor?.full_name || profile?.full_name || "Doctor"}
+                                {doctor?.full_name ||
+                                    profile?.full_name ||
+                                    "Doctor"}
                             </strong>
+
                             <span>
                                 {doctor?.specialization || "Doctor"}
                             </span>
