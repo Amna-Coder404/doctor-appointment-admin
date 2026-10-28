@@ -31,6 +31,7 @@ export async function getAppointments() {
     return data ?? [];
 }
 
+// Admin: update appointment status.
 export async function updateAppointmentStatus(id, status) {
     const allowedStatuses = ["confirmed", "cancelled", "completed"];
 
@@ -38,9 +39,16 @@ export async function updateAppointmentStatus(id, status) {
         throw new Error("Invalid appointment status.");
     }
 
+    const updates = { status };
+
+    // Assumes payment has been received when an appointment is completed.
+    if (status === "completed") {
+        updates.payment_status = "paid";
+    }
+
     const { data, error } = await supabase
         .from("appointments")
-        .update({ status })
+        .update(updates)
         .eq("id", id)
         .select()
         .single();
@@ -61,7 +69,6 @@ export async function getDoctorProfile(userId) {
 
     return data;
 }
-
 
 export async function getDoctorAppointments(doctorId) {
     const { data, error } = await supabase
@@ -91,13 +98,14 @@ export async function getDoctorAppointments(doctorId) {
         throw error;
     }
 
-
-
     return data ?? [];
 }
 
-
-export async function updateDoctorAppointmentStatus(appointmentId, status) {
+// Doctor: update status through the existing secure database RPC.
+export async function updateDoctorAppointmentStatus(
+    appointmentId,
+    status
+) {
     const allowedStatuses = ["confirmed", "cancelled", "completed"];
 
     if (!allowedStatuses.includes(status)) {
