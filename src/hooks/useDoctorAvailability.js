@@ -10,7 +10,6 @@ import {
     deleteDoctorAvailability,
 } from "../services/doctorAvailabilityService";
 
-
 export const INITIAL_SCHEDULE = {
     day_of_week: "1",
     start_time: "09:00",
@@ -24,15 +23,19 @@ export const INITIAL_LEAVE = {
     reason: "",
 };
 
-
 export default function useDoctorAvailability() {
     const [doctors, setDoctors] = useState([]);
     const [doctorId, setDoctorId] = useState(null);
     const [schedules, setSchedules] = useState([]);
     const [unavailable, setUnavailable] = useState([]);
 
-    const [schedule, setSchedule] = useState(INITIAL_SCHEDULE);
-    const [leave, setLeave] = useState(INITIAL_LEAVE);
+    const [schedule, setSchedule] = useState({
+        ...INITIAL_SCHEDULE,
+    });
+
+    const [leave, setLeave] = useState({
+        ...INITIAL_LEAVE,
+    });
 
     const [loading, setLoading] = useState(true);
     const [savingSchedule, setSavingSchedule] = useState(false);
@@ -45,14 +48,21 @@ export default function useDoctorAvailability() {
     const loadDoctors = useCallback(async () => {
         const data = await fetchDoctors();
 
-        setDoctors(data);
+        const safeDoctors = Array.isArray(data) ? data : [];
+
+        setDoctors(safeDoctors);
 
         setDoctorId((current) => {
-            if (current && data.some((doctor) => doctor.id === current)) {
+            if (
+                current &&
+                safeDoctors.some(
+                    (doctor) => String(doctor.id) === String(current)
+                )
+            ) {
                 return current;
             }
 
-            return data[0]?.id ?? null;
+            return safeDoctors[0]?.id ?? null;
         });
     }, []);
 
@@ -73,32 +83,71 @@ export default function useDoctorAvailability() {
                 fetchDoctorUnavailability(doctorId),
             ]);
 
-            setSchedules(scheduleData);
-            setUnavailable(unavailableData);
+            setSchedules(Array.isArray(scheduleData) ? scheduleData : []);
+            setUnavailable(
+                Array.isArray(unavailableData) ? unavailableData : []
+            );
         } catch (err) {
-            setError(err.message || "Unable to load doctor schedules.");
+            setError(err?.message || "Unable to load doctor schedules.");
         } finally {
             setLoading(false);
         }
     }, [doctorId]);
 
     useEffect(() => {
-        loadDoctors().catch((err) => {
-            setError(err.message || "Unable to load doctors.");
-            setLoading(false);
-        });
-    }, [loadDoctors]);
+        let cancelled = false;
+
+        async function initializeDoctors() {
+            setLoading(true);
+
+            try {
+                const data = await fetchDoctors();
+
+                if (cancelled) return;
+
+                const safeDoctors = Array.isArray(data) ? data : [];
+
+                setDoctors(safeDoctors);
+
+                setDoctorId((current) => {
+                    if (
+                        current &&
+                        safeDoctors.some(
+                            (doctor) =>
+                                String(doctor.id) === String(current)
+                        )
+                    ) {
+                        return current;
+                    }
+
+                    return safeDoctors[0]?.id ?? null;
+                });
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err?.message || "Unable to load doctors.");
+                    setLoading(false);
+                }
+            }
+        }
+
+        initializeDoctors();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         loadDoctorData();
     }, [loadDoctorData]);
 
     const selectedDoctor = doctors.find(
-        (doctor) => doctor.id === doctorId
+        (doctor) => String(doctor.id) === String(doctorId)
     );
 
     async function handleAddSchedule(event) {
         event.preventDefault();
+
         setError("");
         setSuccess("");
 
@@ -107,12 +156,22 @@ export default function useDoctorAvailability() {
             return;
         }
 
-        if (schedule.end_time <= schedule.start_time) {
+        if (
+            !schedule.start_time ||
+            !schedule.end_time ||
+            schedule.end_time <= schedule.start_time
+        ) {
             setError("End time must be later than start time.");
             return;
         }
 
         const duration = Number(schedule.slot_duration_minutes);
+        const day = Number(schedule.day_of_week);
+
+        if (!Number.isInteger(day) || day < 0 || day > 6) {
+            setError("Please select a valid day.");
+            return;
+        }
 
         if (!Number.isInteger(duration) || duration <= 0) {
             setError("Slot duration must be a positive whole number.");
@@ -122,7 +181,11 @@ export default function useDoctorAvailability() {
         setSavingSchedule(true);
 
         try {
-            await addDoctorSchedule(doctorId, schedule);
+            await addDoctorSchedule(doctorId, {
+                ...schedule,
+                day_of_week: day,
+                slot_duration_minutes: duration,
+            });
 
             setSchedule({ ...INITIAL_SCHEDULE });
             setSuccess("Weekly schedule added successfully.");
@@ -130,9 +193,9 @@ export default function useDoctorAvailability() {
             await loadDoctorData();
         } catch (err) {
             setError(
-                err.code === "23505"
+                err?.code === "23505"
                     ? "This exact schedule already exists."
-                    : err.message || "Unable to save the schedule."
+                    : err?.message || "Unable to save the schedule."
             );
         } finally {
             setSavingSchedule(false);
@@ -141,6 +204,7 @@ export default function useDoctorAvailability() {
 
     async function handleAddUnavailable(event) {
         event.preventDefault();
+
         setError("");
         setSuccess("");
 
@@ -149,16 +213,19 @@ export default function useDoctorAvailability() {
             return;
         }
 
+        if (!leave.starts_at || !leave.ends_at) {
+            setError("Please enter both start and end dates.");
+            return;
+        }
+
         const start = new Date(leave.starts_at);
         const end = new Date(leave.ends_at);
 
         if (
-            !leave.starts_at ||
-            !leave.ends_at ||
             Number.isNaN(start.getTime()) ||
             Number.isNaN(end.getTime())
         ) {
-            setError("Please enter a valid start and end date/time.");
+            setError("Please enter valid start and end dates.");
             return;
         }
 
@@ -170,14 +237,20 @@ export default function useDoctorAvailability() {
         setSavingLeave(true);
 
         try {
-            await addDoctorUnavailability(doctorId, leave);
+            await addDoctorUnavailability(doctorId, {
+                ...leave,
+                starts_at: start.toISOString(),
+                ends_at: end.toISOString(),
+            });
 
             setLeave({ ...INITIAL_LEAVE });
             setSuccess("Unavailable period added successfully.");
 
             await loadDoctorData();
         } catch (err) {
-            setError(err.message || "Unable to save unavailable period.");
+            setError(
+                err?.message || "Unable to save unavailable period."
+            );
         } finally {
             setSavingLeave(false);
         }
@@ -188,7 +261,7 @@ export default function useDoctorAvailability() {
             `Delete this ${label}? This action cannot be undone.`
         );
 
-        if (!confirmed) return;
+        if (!confirmed || !doctorId) return;
 
         setError("");
         setSuccess("");
@@ -200,7 +273,9 @@ export default function useDoctorAvailability() {
             setSuccess(`${label} deleted successfully.`);
             await loadDoctorData();
         } catch (err) {
-            setError(err.message || `Unable to delete ${label}.`);
+            setError(
+                err?.message || `Unable to delete ${label}.`
+            );
         } finally {
             setDeletingId(null);
         }

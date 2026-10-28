@@ -1,11 +1,14 @@
 
-import { Alert, Badge, Box, Button, Group, Paper, Select, SimpleGrid, Stack, Table, Text, TextInput, Textarea, Title, } from "@mantine/core";
+import {
+    Alert, Badge, Box, Button, Group, Paper, Select, SimpleGrid, Stack, Table, Text, TextInput, Textarea, Title,
+} from "@mantine/core";
 
-import { CalendarDays, Clock, Plus, RefreshCw, Trash2, } from "lucide-react";
-
-
+import {
+    CalendarDays, Clock, Plus, RefreshCw, Trash2,
+} from "lucide-react";
 
 import "../styles/DoctorsManagement.css";
+
 import { DAYS, formatDateTime, formatTime } from "../utils/utils";
 import useDoctorAvailability from "../hooks/useDoctorAvailability";
 
@@ -33,19 +36,28 @@ export default function DoctorAvailability() {
         handleDelete,
     } = useDoctorAvailability();
 
+    const doctorOptions = doctors.map((doctor) => ({
+        value: String(doctor.id),
+        label: `${doctor.full_name} — ${doctor.specialization || "General"
+            }`,
+    }));
+
     return (
         <Box className="doctors-page">
             <Stack gap="xl">
                 <div className="doctors-header">
                     <div>
-                        <Text className="eyebrow">   ADMINISTRATION   </Text>
+                        <Text className="eyebrow">
+                            ADMINISTRATION
+                        </Text>
 
                         <Title order={1}>
                             Doctor Availability
                         </Title>
 
                         <Text className="muted">
-                            Manage weekly working hours and unavailable periods.
+                            Manage weekly working hours and unavailable
+                            periods.
                         </Text>
                     </div>
                 </div>
@@ -62,24 +74,36 @@ export default function DoctorAvailability() {
                     </Alert>
                 )}
 
-                {/* Select doctor */}
-                <Paper className="doctors-panel" withBorder radius="lg" p="md"    >
+                {/* Select Doctor */}
+                <Paper
+                    className="doctors-panel"
+                    withBorder
+                    radius="lg"
+                    p="md"
+                >
                     <Stack gap="md">
                         <Title order={3}>Select Doctor</Title>
 
                         <Select
                             label="Doctor"
                             placeholder="Choose a doctor"
-                            data={doctors.map((doctor) => ({
-                                value: doctor.id,
-                                label: `${doctor.full_name} — ${doctor.specialization || "General"
-                                    }`,
-                            }))}
-                            value={doctorId}
-                            onChange={setDoctorId}
+                            data={doctorOptions}
+                            value={
+                                doctorId != null ? String(doctorId)
+                                    : null
+                            }
+                            onChange={(value) => {
+                                const nextDoctor = doctors.find(
+                                    (doctor) =>
+                                        String(doctor.id) === value
+                                );
+
+                                setDoctorId(nextDoctor?.id ?? null);
+                            }}
                             searchable
                             clearable={false}
                             nothingFoundMessage="No doctors found"
+                            disabled={loading && doctors.length === 0}
                         />
 
                         {selectedDoctor && (
@@ -88,7 +112,13 @@ export default function DoctorAvailability() {
                                     Account status:
                                 </Text>
 
-                                <Badge color={selectedDoctor.is_active ? "green" : "gray"} >
+                                <Badge
+                                    color={
+                                        selectedDoctor.is_active
+                                            ? "green"
+                                            : "gray"
+                                    }
+                                >
                                     {selectedDoctor.is_active ? "Active" : "Inactive"}
                                 </Badge>
                             </Group>
@@ -96,7 +126,7 @@ export default function DoctorAvailability() {
                     </Stack>
                 </Paper>
 
-                {/* Weekly working hours */}
+                {/* Weekly Working Hours */}
                 <Paper
                     className="doctors-panel"
                     withBorder
@@ -112,7 +142,7 @@ export default function DoctorAvailability() {
                         </Group>
 
                         <Text className="muted" size="sm">
-                            Add the recurring working hours when this doctor
+                            Add recurring working hours when this doctor
                             accepts appointments.
                         </Text>
 
@@ -124,61 +154,83 @@ export default function DoctorAvailability() {
                                     <Select
                                         label="Day"
                                         data={DAYS}
-                                        value={schedule.day_of_week}
-                                        onChange={(value) =>
+                                        value={schedule.day_of_week ?? "1"}
+                                        onChange={(value) => {
                                             setSchedule((current) => ({
                                                 ...current,
                                                 day_of_week: value ?? "1",
-                                            }))
-                                        }
+                                            }));
+                                        }}
                                         required
                                     />
 
                                     <TextInput
                                         label="Start time"
                                         type="time"
-                                        value={schedule.start_time}
-                                        onChange={(event) =>
+                                        value={schedule.start_time ?? ""}
+                                        onChange={(event) => {
+                                            const value =
+                                                event.currentTarget.value;
+
                                             setSchedule((current) => ({
                                                 ...current,
-                                                start_time:
-                                                    event.currentTarget.value,
-                                            }))
-                                        }
+                                                start_time: value,
+                                            }));
+                                        }}
                                         required
                                     />
 
                                     <TextInput
                                         label="End time"
                                         type="time"
-                                        value={schedule.end_time}
-                                        onChange={(event) =>
+                                        value={schedule.end_time ?? ""}
+                                        onChange={(event) => {
+                                            const value =
+                                                event.currentTarget.value;
+
                                             setSchedule((current) => ({
                                                 ...current,
-                                                end_time:
-                                                    event.currentTarget.value,
-                                            }))
-                                        }
+                                                end_time: value,
+                                            }));
+                                        }}
                                         required
                                     />
 
                                     <Select
                                         label="Appointment duration"
                                         data={[
-                                            { value: "15", label: "15 minutes" },
-                                            { value: "20", label: "20 minutes" },
-                                            { value: "30", label: "30 minutes" },
-                                            { value: "45", label: "45 minutes" },
-                                            { value: "60", label: "60 minutes" },
+                                            {
+                                                value: "15",
+                                                label: "15 minutes",
+                                            },
+                                            {
+                                                value: "20",
+                                                label: "20 minutes",
+                                            },
+                                            {
+                                                value: "30",
+                                                label: "30 minutes",
+                                            },
+                                            {
+                                                value: "45",
+                                                label: "45 minutes",
+                                            },
+                                            {
+                                                value: "60",
+                                                label: "60 minutes",
+                                            },
                                         ]}
-                                        value={schedule.slot_duration_minutes}
-                                        onChange={(value) =>
+                                        value={
+                                            schedule.slot_duration_minutes ??
+                                            "30"
+                                        }
+                                        onChange={(value) => {
                                             setSchedule((current) => ({
                                                 ...current,
                                                 slot_duration_minutes:
                                                     value ?? "30",
-                                            }))
-                                        }
+                                            }));
+                                        }}
                                         required
                                     />
                                 </SimpleGrid>
@@ -221,7 +273,8 @@ export default function DoctorAvailability() {
                                             </Table.Td>
 
                                             <Table.Td>
-                                                {formatTime(item.start_time)} –{" "}
+                                                {formatTime(item.start_time)}
+                                                {" – "}
                                                 {formatTime(item.end_time)}
                                             </Table.Td>
 
@@ -278,8 +331,8 @@ export default function DoctorAvailability() {
                                                     ta="center"
                                                     py="md"
                                                 >
-                                                    No working hours added for
-                                                    this doctor.
+                                                    No working hours added
+                                                    for this doctor.
                                                 </Text>
                                             </Table.Td>
                                         </Table.Tr>
@@ -304,7 +357,7 @@ export default function DoctorAvailability() {
                     </Stack>
                 </Paper>
 
-                {/* Unavailable dates and times */}
+                {/* Unavailable Dates and Times */}
                 <Paper
                     className="doctors-panel"
                     withBorder
@@ -314,15 +367,14 @@ export default function DoctorAvailability() {
                     <Stack gap="md">
                         <Group gap="xs">
                             <CalendarDays size={20} />
-
                             <Title order={3}>
                                 Unavailable Dates & Times
                             </Title>
                         </Group>
 
                         <Text className="muted" size="sm">
-                            Block specific periods for leave, holidays, breaks,
-                            or other reasons. Use your local date and time.
+                            Block specific periods for leave, holidays,
+                            breaks, or other reasons.
                         </Text>
 
                         <form onSubmit={handleAddUnavailable}>
@@ -331,28 +383,32 @@ export default function DoctorAvailability() {
                                     <TextInput
                                         label="Start date and time"
                                         type="datetime-local"
-                                        value={leave.starts_at}
-                                        onChange={(event) =>
+                                        value={leave.starts_at ?? ""}
+                                        onChange={(event) => {
+                                            const value =
+                                                event.currentTarget.value;
+
                                             setLeave((current) => ({
                                                 ...current,
-                                                starts_at:
-                                                    event.currentTarget.value,
-                                            }))
-                                        }
+                                                starts_at: value,
+                                            }));
+                                        }}
                                         required
                                     />
 
                                     <TextInput
                                         label="End date and time"
                                         type="datetime-local"
-                                        value={leave.ends_at}
-                                        onChange={(event) =>
+                                        value={leave.ends_at ?? ""}
+                                        onChange={(event) => {
+                                            const value =
+                                                event.currentTarget.value;
+
                                             setLeave((current) => ({
                                                 ...current,
-                                                ends_at:
-                                                    event.currentTarget.value,
-                                            }))
-                                        }
+                                                ends_at: value,
+                                            }));
+                                        }}
                                         required
                                     />
                                 </SimpleGrid>
@@ -360,14 +416,16 @@ export default function DoctorAvailability() {
                                 <Textarea
                                     label="Reason (optional)"
                                     placeholder="e.g. Doctor on leave"
-                                    value={leave.reason}
-                                    onChange={(event) =>
+                                    value={leave.reason ?? ""}
+                                    onChange={(event) => {
+                                        const value =
+                                            event.currentTarget.value;
+
                                         setLeave((current) => ({
                                             ...current,
-                                            reason:
-                                                event.currentTarget.value,
-                                        }))
-                                    }
+                                            reason: value,
+                                        }));
+                                    }}
                                     autosize
                                     minRows={2}
                                 />
@@ -409,7 +467,8 @@ export default function DoctorAvailability() {
                                             </Table.Td>
 
                                             <Table.Td>
-                                                {item.reason || "Not specified"}
+                                                {item.reason ||
+                                                    "Not specified"}
                                             </Table.Td>
 
                                             <Table.Td>
@@ -447,7 +506,8 @@ export default function DoctorAvailability() {
                                                     ta="center"
                                                     py="md"
                                                 >
-                                                    No unavailable periods added.
+                                                    No unavailable periods
+                                                    added.
                                                 </Text>
                                             </Table.Td>
                                         </Table.Tr>
@@ -461,7 +521,8 @@ export default function DoctorAvailability() {
                                                     ta="center"
                                                     py="md"
                                                 >
-                                                    Loading unavailable periods...
+                                                    Loading unavailable
+                                                    periods...
                                                 </Text>
                                             </Table.Td>
                                         </Table.Tr>
