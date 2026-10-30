@@ -1,177 +1,163 @@
-
 import {
     Activity,
     CalendarDays,
+    Clock3,
     Stethoscope,
-    Users,
-    ArrowUpRight,
-    Clock,
 } from "lucide-react";
-
 import {
+    Alert,
     Badge,
-    Card,
-    Skeleton,
+    Box,
+    Button,
+    Group,
+    Paper,
+    SimpleGrid,
+    Stack,
+    Text,
     ThemeIcon,
+    Title,
 } from "@mantine/core";
+import { Link } from "react-router-dom";
 
 import useAdminDashboard from "../hooks/useAdminDashboard";
 import ManagementCard from "../components/ManagementCard";
 import ChangePasswordForm from "../components/ChangePasswordForm";
+import PageHeader from "../components/ui/PageHeader";
+import StatCard from "../components/ui/StatCard";
 
 export default function AdminDashboard({ profile }) {
-    const {
-        stats,
-        loading,
-        error,
-        refreshStats,
-    } = useAdminDashboard();
+    const { stats, loading, error, refreshStats } = useAdminDashboard();
 
     return (
-        <main className="dashboard-main">
-            <header className="dashboard-header">
-                <div>
-                    <p className="eyebrow">OVERVIEW</p>
-                    <h1>Admin dashboard</h1>
-                    <p className="muted">
-                        Here's what's happening at your clinic.
-                    </p>
-                </div>
+        <Stack gap="xl">
+            <PageHeader
+                eyebrow="Overview"
+                title="Admin dashboard"
+                subtitle="Monitor your clinic and manage daily operations."
+                action={<Badge color="teal" variant="light" size="lg">Administrator access</Badge>}
+            />
 
-                <Badge
-                    className="admin-chip"
-                    variant="light"
-                    color="teal"
-                    size="lg"
-                    radius="xl"
-                >
-                    <span className="online-dot" />
-                    Admin access
-                </Badge>
-            </header>
+            <Paper
+                radius="xl"
+                p={{ base: "lg", sm: "xl" }}
+                style={{
+                    overflow: "hidden",
+                    background: "linear-gradient(120deg, #0f766e 0%, #115e59 65%, #134e4a 100%)",
+                    color: "white",
+                }}
+            >
+                <Group justify="space-between" align="center" wrap="nowrap">
+                    <Stack gap="sm" maw={620}>
+                        <Badge color="teal" variant="light" w="fit-content" style={{ background: "rgba(255,255,255,.16)", color: "#ffffff" }}>CLINIC WORKSPACE</Badge>
+                        <Title order={2} c="white" size="h2">
+                            Welcome back, {profile?.full_name || "Admin"}
+                        </Title>
+                        <Text c="teal.0" size="sm" lh={1.7}>
+                            Keep your doctors, appointments and availability organized from one place.
+                        </Text>
+                        <Button
+                            component={Link}
+                            to="/admin/appointments"
+                            color="teal"
+                            variant="white"
+                            w="fit-content"
+                            mt="xs"
+                        >
+                            Review appointments
+                        </Button>
+                    </Stack>
+                    <ThemeIcon
+                        visibleFrom="sm"
+                        size={104}
+                        radius="xl"
+                        variant="light"
+                        color="teal"
+                        style={{ background: "rgba(255,255,255,.12)", color: "#ffffff" }}
+                    >
+                        <Activity size={48} />
+                    </ThemeIcon>
+                </Group>
+            </Paper>
 
             {error && (
-                <div role="alert" className="dashboard-error">
-                    <p>{error}</p>
-                    <button type="button" onClick={refreshStats}>
-                        Try again
-                    </button>
-                </div>
+                <Alert color="red" title="Dashboard data unavailable" withCloseButton={false}>
+                    <Group justify="space-between">
+                        <Text size="sm">{error}</Text>
+                        <Button size="xs" variant="light" color="red" onClick={refreshStats}>Retry</Button>
+                    </Group>
+                </Alert>
             )}
 
-            <section className="welcome-banner">
-                <div>
-                    <p>YOUR CLINIC WORKSPACE</p>
-                    <h2>
-                        Welcome back, {profile?.full_name || "Admin"}.
-                    </h2>
-                    <span>
-                        Manage your doctors and appointments in one place.
-                    </span>
-                </div>
+            <Box>
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Clinic overview</Title>
+                    <Text size="xs" c="dimmed">Live Supabase counts</Text>
+                </Group>
+                <SimpleGrid cols={{ base: 1, xs: 2, lg: 3 }} spacing="md">
+                    <StatCard
+                        title="Total doctors"
+                        value={stats.doctors}
+                        icon={<Stethoscope size={22} />}
+                        color="teal"
+                        description="Registered doctors"
+                        loading={loading}
+                    />
+                    <StatCard
+                        title="Appointments"
+                        value={stats.appointments}
+                        icon={<CalendarDays size={22} />}
+                        color="blue"
+                        description="All bookings"
+                        loading={loading}
+                    />
+                    <StatCard
+                        title="Pending bookings"
+                        value={stats.pending}
+                        icon={<Clock3 size={22} />}
+                        color="orange"
+                        description="Awaiting action"
+                        loading={loading}
+                    />
+                </SimpleGrid>
+            </Box>
 
-                <Activity size={54} strokeWidth={1.3} />
-            </section>
+            <Box>
+                <Stack gap={4} mb="md">
+                    <Title order={3}>Management</Title>
+                    <Text size="sm" c="dimmed">Choose a workspace to continue.</Text>
+                </Stack>
+                <SimpleGrid cols={{ base: 1, sm: 2, xl: 3 }} spacing="md">
+                    <ManagementCard
+                        icon={<Stethoscope size={22} />}
+                        title="Doctors"
+                        description="Create doctor accounts, update professional details and manage account status."
+                        target="/admin/doctors"
+                        color="teal"
+                    />
+                    <ManagementCard
+                        icon={<CalendarDays size={22} />}
+                        title="Appointments"
+                        description="Review patient bookings and manage appointment status."
+                        target="/admin/appointments"
+                        color="blue"
+                    />
+                    <ManagementCard
+                        icon={<Clock3 size={22} />}
+                        title="Availability"
+                        description="Configure weekly working hours and unavailable periods for doctors."
+                        target="/admin/availability"
+                        color="violet"
+                    />
+                </SimpleGrid>
+            </Box>
 
-            <section className="stats-grid">
-                <StatCard
-                    title="Total doctors"
-                    value={stats?.doctors}
-                    icon={<Stethoscope size={22} />}
-                    loading={loading}
-                />
-
-                <StatCard
-                    title="Total appointments"
-                    value={stats?.appointments}
-                    icon={<CalendarDays size={22} />}
-                    loading={loading}
-                />
-
-                <StatCard
-                    title="Pending bookings"
-                    value={stats?.pending}
-                    icon={<Users size={22} />}
-                    loading={loading}
-                />
-            </section>
-
-            <section className="section-heading">
-                <div>
-                    <h2>Management</h2>
-                    <p className="muted">
-                        Choose what you want to manage.
-                    </p>
-                </div>
-            </section>
-
-            <section className="management-grid">
-                <ManagementCard
-                    icon={<Stethoscope size={22} />}
-                    title="Doctor management"
-                    description="Update doctor profiles, consultation fees and status."
-                    target="/admin/doctors"
-                />
-
-                <ManagementCard
-                    icon={<CalendarDays size={22} />}
-                    title="Appointments"
-                    description="Review patient bookings and appointment statuses."
-                    target="/admin/appointments"
-                />
-
-                <ManagementCard
-                    icon={<Clock size={22} />}
-                    title="Doctor availability"
-                    description="Manage weekly working hours and unavailable periods."
-                    target="/admin/doctor-availability"
-                />
-            </section>
-
-            <section className="section-heading">
-                <div>
-                    <h2>Account security</h2>
-                    <p className="muted">
-                        Keep your admin account secure.
-                    </p>
-                </div>
-            </section>
-
-            <ChangePasswordForm />
-        </main>
-    );
-}
-
-function StatCard({ title, value, icon, loading }) {
-    return (
-        <Card
-            className="stat-card"
-            padding="lg"
-            radius="lg"
-            withBorder
-        >
-            <ThemeIcon
-                className="stat-icon"
-                size={46}
-                radius="md"
-                variant="light"
-                color="violet"
-            >
-                {icon}
-            </ThemeIcon>
-
-            <p>{title}</p>
-
-            {loading ? (
-                <Skeleton height={32} width={70} />
-            ) : (
-                <h3>{value ?? 0}</h3>
-            )}
-
-            <span className="stat-caption">
-                Live data from Supabase{" "}
-                <ArrowUpRight size={14} />
-            </span>
-        </Card>
+            <Box>
+                <Stack gap={4} mb="md">
+                    <Title order={3}>Account security</Title>
+                    <Text size="sm" c="dimmed">Update your administrator password.</Text>
+                </Stack>
+                <ChangePasswordForm />
+            </Box>
+        </Stack>
     );
 }

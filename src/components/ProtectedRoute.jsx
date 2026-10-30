@@ -1,5 +1,5 @@
-
-import { Navigate } from 'react-router-dom'
+import { Center, Loader, Stack, Text } from "@mantine/core";
+import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({
     session,
@@ -7,32 +7,27 @@ export default function ProtectedRoute({
     requiredRole,
     children,
 }) {
-    if (!session) {
-        return <Navigate to="/login" replace />
-    }
+    if (!session) return <Navigate to="/login" replace />;
 
     if (!profile) {
         return (
-            <div className="loading-screen">
-                <p>Checking account permissions...</p>
-            </div>
-        )
+            <Center mih="100vh">
+                <Stack align="center" gap="sm">
+                    <Loader color="teal" />
+                    <Text size="sm" c="dimmed">Checking account permissions...</Text>
+                </Stack>
+            </Center>
+        );
     }
 
     if (profile.role !== requiredRole) {
         return (
             <Navigate
-                to={
-                    profile.role === 'admin'
-                        ? '/admin/dashboard'
-                        : profile.role === 'doctor'
-                            ? '/doctor/dashboard'
-                            : '/login'
-                }
+                to={profile.role === "admin" ? "/admin/dashboard" : profile.role === "doctor" ? "/doctor/dashboard" : "/login"}
                 replace
             />
-        )
+        );
     }
 
-    return children
+    return children;
 }

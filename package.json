@@ -11,12 +11,17 @@
   },
   "dependencies": {
     "@mantine/core": "^9.7.3",
+    "@mantine/dates": "^9.7.4",
+    "@mantine/form": "^9.7.4",
     "@mantine/hooks": "^9.7.3",
+    "@mantine/notifications": "^9.7.4",
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.59.0",
+    "motion": "^14.8.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

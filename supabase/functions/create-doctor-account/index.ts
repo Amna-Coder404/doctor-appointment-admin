@@ -1,9 +1,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const siteUrl =
+const siteUrl = (
     Deno.env.get("SITE_URL") ??
-    "http://localhost:5173";
+    "https://doctor-appointment-admin-nine-coral.vercel.app"
+).replace(/\/$/, "");
+
 
 const allowedOrigins = new Set([
     "http://localhost:5173",

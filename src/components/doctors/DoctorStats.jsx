@@ -1,29 +1,16 @@
-
+import { SimpleGrid } from "@mantine/core";
 import { Stethoscope, UserCheck, UserX } from "lucide-react";
+import StatCard from "../ui/StatCard";
 
-export default function DoctorStats({ doctors }) {
+export default function DoctorStats({ doctors = [] }) {
     const active = doctors.filter((doctor) => doctor.is_active).length;
     const inactive = doctors.length - active;
 
-    const stats = [
-        { label: "Total Doctors", value: doctors.length, Icon: Stethoscope },
-        { label: "Active", value: active, Icon: UserCheck },
-        { label: "Inactive", value: inactive, Icon: UserX },
-    ];
-
     return (
-        <div className="doctor-stats">
-            {stats.map(({ label, value, Icon }) => (
-                <div className="doctor-stat-card" key={label}>
-                    <span className="doctor-stat-icon">
-                        <Icon size={21} />
-                    </span>
-                    <div>
-                        <p>{label}</p>
-                        <h3>{value}</h3>
-                    </div>
-                </div>
-            ))}
-        </div>
+        <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="md">
+            <StatCard title="Total doctors" value={doctors.length} icon={<Stethoscope size={21} />} description="Registered profiles" />
+            <StatCard title="Active doctors" value={active} icon={<UserCheck size={21} />} color="teal" description="Can receive bookings" />
+            <StatCard title="Inactive doctors" value={inactive} icon={<UserX size={21} />} color="orange" description="Not accepting bookings" />
+        </SimpleGrid>
     );
 }

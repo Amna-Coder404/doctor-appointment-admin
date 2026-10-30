@@ -1,22 +1,31 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+    Activity,
     ArrowLeft,
-    HeartPulse,
     LockKeyhole,
     ShieldCheck,
     Stethoscope,
 } from "lucide-react";
-import { Button, Loader } from "@mantine/core";
+import {
+    Alert,
+    Box,
+    Button,
+    Center,
+    Group,
+    Loader,
+    Paper,
+    Stack,
+    Text,
+    ThemeIcon,
+    Title,
+} from "@mantine/core";
 
 import { supabase } from "../lib/supabase.jsx";
 import ChangePasswordForm from "../components/ChangePasswordForm";
-import "../styles/ResetPassword.css";
 
 export default function ResetPassword() {
     const navigate = useNavigate();
-
     const [checking, setChecking] = useState(true);
     const [error, setError] = useState("");
     const [sessionReady, setSessionReady] = useState(false);
@@ -31,31 +40,21 @@ export default function ResetPassword() {
                 const type = params.get("type");
 
                 if (tokenHash && (type === "invite" || type === "recovery")) {
-                    const { error: verifyError } =
-                        await supabase.auth.verifyOtp({
-                            token_hash: tokenHash,
-                            type,
-                        });
-
+                    const { error: verifyError } = await supabase.auth.verifyOtp({
+                        token_hash: tokenHash,
+                        type,
+                    });
                     if (verifyError) throw verifyError;
                 }
 
-                const { data, error: sessionError } =
-                    await supabase.auth.getSession();
-
+                const { data, error: sessionError } = await supabase.auth.getSession();
                 if (sessionError) throw sessionError;
 
                 if (!data.session) {
-                    throw new Error(
-                        "This invitation link is invalid or expired. Ask the admin to send a new invitation."
-                    );
+                    throw new Error("This invitation link is invalid or expired. Ask the admin to send a new invitation.");
                 }
 
-                window.history.replaceState(
-                    {},
-                    document.title,
-                    window.location.pathname
-                );
+                window.history.replaceState({}, document.title, window.location.pathname);
 
                 if (active) {
                     setSessionReady(true);
@@ -63,10 +62,7 @@ export default function ResetPassword() {
                 }
             } catch (err) {
                 if (active) {
-                    setError(
-                        err?.message ||
-                        "Could not verify your invitation."
-                    );
+                    setError(err?.message || "Could not verify your invitation.");
                     setSessionReady(false);
                 }
             } finally {
@@ -75,10 +71,7 @@ export default function ResetPassword() {
         }
 
         verifyInvitation();
-
-        return () => {
-            active = false;
-        };
+        return () => { active = false; };
     }, []);
 
     async function handleSuccess() {
@@ -87,156 +80,64 @@ export default function ResetPassword() {
     }
 
     return (
-        <main className="reset-page">
-            <div className="reset-background reset-background-one" />
-            <div className="reset-background reset-background-two" />
+        <Box
+            mih="100vh"
+            p={{ base: "md", sm: "xl" }}
+            style={{
+                display: "grid",
+                placeItems: "center",
+                background: "radial-gradient(circle at 85% 15%, rgba(20,184,166,.12), transparent 30%), linear-gradient(135deg, #f2f8f7, #f8fafc)",
+            }}
+        >
+            <Stack w="100%" maw={520} gap="lg">
+                <Group justify="center" gap="sm">
+                    <ThemeIcon size={42} radius="lg" color="teal">
+                        <Activity size={22} />
+                    </ThemeIcon>
+                    <Box>
+                        <Text fw={800} size="lg">MediBook</Text>
+                        <Text size="xs" c="dimmed">Healthcare management</Text>
+                    </Box>
+                </Group>
 
-            <header className="reset-topbar">
-                <button
-                    type="button"
-                    className="reset-brand"
-                    onClick={() => navigate("/login")}
-                    aria-label="MediBook login"
-                >
-                    <span className="reset-brand-icon">
-                        <HeartPulse size={23} />
-                    </span>
-
-                    <span>
-                        <strong>MediBook</strong>
-                        <small>Healthcare management</small>
-                    </span>
-                </button>
-
-                <div className="reset-secure-label">
-                    <ShieldCheck size={17} />
-                    <span>Secure account setup</span>
-                </div>
-            </header>
-
-            <section className="reset-content">
-                <div className="reset-intro">
-                    <div className="reset-icon">
-                        <LockKeyhole size={27} />
-                    </div>
-
-                    <p className="reset-eyebrow">
-                        DOCTOR ACCOUNT SECURITY
-                    </p>
-
-                    <h1>
-                        Your account,
-                        <br />
-                        <span>your security.</span>
-                    </h1>
-
-                    <p className="reset-description">
-                        Create a secure password to access your MediBook
-                        doctor dashboard and manage your appointments.
-                    </p>
-
-                    <div className="reset-benefits">
-                        <div className="reset-benefit">
-                            <span className="reset-benefit-icon">
-                                <ShieldCheck size={19} />
-                            </span>
-                            <div>
-                                <strong>Secure access</strong>
-                                <p>Protect your professional account.</p>
-                            </div>
-                        </div>
-
-                        <div className="reset-benefit">
-                            <span className="reset-benefit-icon">
-                                <Stethoscope size={19} />
-                            </span>
-                            <div>
-                                <strong>Doctor workspace</strong>
-                                <p>Manage your clinic activities in one place.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="reset-panel">
-                    {checking ? (
-                        <div className="reset-status">
-                            <span className="reset-status-icon">
+                {checking && (
+                    <Paper withBorder radius="xl" shadow="lg" p="xl">
+                        <Center py="xl">
+                            <Stack align="center" gap="sm">
                                 <Loader color="teal" size="lg" />
-                            </span>
-                            <h2>Verifying your invitation</h2>
-                            <p>
-                                Please wait while we securely verify your
-                                invitation link.
-                            </p>
-                        </div>
-                    ) : sessionReady ? (
-                        <div className="reset-form-wrapper">
-                            <div className="reset-panel-heading">
-                                <span className="reset-panel-icon">
-                                    <LockKeyhole size={21} />
-                                </span>
+                                <Text fw={600}>Verifying your invitation</Text>
+                                <Text size="sm" c="dimmed" ta="center">
+                                    Please wait while we securely verify your link.
+                                </Text>
+                            </Stack>
+                        </Center>
+                    </Paper>
+                )}
 
-                                <div>
-                                    <h2>Set your password</h2>
-                                    <p>
-                                        Choose a strong password for your account.
-                                    </p>
-                                </div>
-                            </div>
+                {!checking && sessionReady && (
+                    <ChangePasswordForm mode="reset" onSuccess={handleSuccess} />
+                )}
 
-                            <div className="reset-form">
-                                <ChangePasswordForm
-                                    mode="reset"
-                                    onSuccess={handleSuccess}
-                                />
-                            </div>
-
-                            <div className="reset-security-note">
-                                <ShieldCheck size={17} />
-                                <span>
-                                    Use at least 8 characters for your password.
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="reset-status reset-error-state">
-                            <span className="reset-status-icon">
-                                <ShieldCheck size={27} />
-                            </span>
-
-                            <h2>Invitation unavailable</h2>
-
-                            <p>
-                                {error ||
-                                    "We could not verify this invitation."}
-                            </p>
-
-                            <p>
-                                Ask your administrator to check your doctor
-                                account and send a new invitation.
-                            </p>
-
-                            <Button
-                                color="teal"
-                                radius="md"
-                                leftSection={<ArrowLeft size={16} />}
-                                onClick={() => navigate("/login")}
-                            >
-                                Back to login
+                {!checking && !sessionReady && (
+                    <Paper withBorder radius="xl" shadow="lg" p={{ base: "lg", sm: "xl" }}>
+                        <Stack align="center" gap="md">
+                            <ThemeIcon size={54} radius="xl" color="red" variant="light">
+                                <ShieldCheck size={26} />
+                            </ThemeIcon>
+                            <Title order={3} ta="center">Invitation unavailable</Title>
+                            <Alert color="red" w="100%">{error}</Alert>
+                            <Button onClick={() => navigate("/login")} leftSection={<ArrowLeft size={16} />}>
+                                Back to sign in
                             </Button>
-                        </div>
-                    )}
-                </div>
-            </section>
+                        </Stack>
+                    </Paper>
+                )}
 
-            <footer className="reset-footer">
-                <span>
-                    <ShieldCheck size={15} />
-                    Your account security matters
-                </span>
-                <span>© {new Date().getFullYear()} MediBook</span>
-            </footer>
-        </main>
+                <Text size="xs" c="dimmed" ta="center">
+                    <Stethoscope size={13} style={{ verticalAlign: "middle", marginRight: 5 }} />
+                    MediBook secure account setup
+                </Text>
+            </Stack>
+        </Box>
     );
 }

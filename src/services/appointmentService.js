@@ -61,7 +61,7 @@ export async function updateAppointmentStatus(id, status) {
 export async function getDoctorProfile(userId) {
     const { data, error } = await supabase
         .from("doctors")
-        .select("id, full_name, specialization, profile_image_url")
+        .select("*")
         .eq("user_id", userId)
         .maybeSingle();
 

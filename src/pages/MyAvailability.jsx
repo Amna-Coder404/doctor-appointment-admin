@@ -1,25 +1,33 @@
-
+import { CalendarDays, CalendarOff, Clock3, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import {
-    ArrowLeft,
-    CalendarDays,
-    Clock3,
-    Pencil,
-    Plus,
-    RefreshCw,
-    Trash2,
-    CalendarOff,
-    Stethoscope,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+    Alert,
+    Badge,
+    Button,
+    Group,
+    Paper,
+    Select,
+    SimpleGrid,
+    Stack,
+    Table,
+    Text,
+    TextInput,
+    Textarea,
+    Title,
+} from "@mantine/core";
 
 import useMyAvailability from "../hooks/useMyAvailability";
-import { formatDateTime, formatStatus, formatTime, DAYS } from "../utils/utils";
+import PageHeader from "../components/ui/PageHeader";
+import { DAYS, formatDateTime, formatTime } from "../utils/utils";
 
-import "../styles/MyAvailability.css";
+const durationOptions = [
+    { value: "15", label: "15 minutes" },
+    { value: "20", label: "20 minutes" },
+    { value: "30", label: "30 minutes" },
+    { value: "45", label: "45 minutes" },
+    { value: "60", label: "60 minutes" },
+];
 
 export default function MyAvailability({ profile }) {
-    const navigate = useNavigate();
-
     const {
         doctor,
         schedules,
@@ -44,408 +52,177 @@ export default function MyAvailability({ profile }) {
     } = useMyAvailability(profile?.id);
 
     return (
-        <div className="dashboard-main my-availability-main">
-            <header className="dashboard-header my-availability-header">
-                <div className="my-availability-heading">
-                    <p className="eyebrow">DOCTOR WORKSPACE</p>
-                    <h1>My Availability</h1>
-                    <p className="muted">
-                        Manage your weekly working hours and time off.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    className="refresh-button my-availability-refresh"
-                    onClick={loadData}
-                    disabled={loading}
-                >
-                    <RefreshCw
-                        size={16}
-                        className={loading ? "my-availability-spinning" : ""}
-                    />
-                    Refresh
-                </button>
-            </header>
+        <Stack gap="xl">
+            <PageHeader
+                eyebrow="DOCTOR WORKSPACE"
+                title="My availability"
+                subtitle="Manage your recurring working hours and time off."
+                action={
+                    <Button
+                        variant="light"
+                        color="gray"
+                        leftSection={<RefreshCw size={16} />}
+                        onClick={loadData}
+                        loading={loading}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
             {doctor && (
-                <section className="management-card my-availability-profile">
-                    <div className="my-availability-profile-icon">
-                        <Stethoscope size={22} />
-                    </div>
-
-                    <div>
-                        <h3>{doctor.full_name}</h3>
-                        <p className="muted">{doctor.specialization}</p>
-                    </div>
-                </section>
-            )}
-
-            {error && (
-                <div className="error-message my-availability-message" role="alert">
-                    {error}
-                </div>
-            )}
-
-            {success && (
-                <div className="success-message my-availability-message" role="status">
-                    {success}
-                </div>
-            )}
-
-            {loading ? (
-                <section className="management-card my-availability-loading">
-                    <RefreshCw size={22} className="my-availability-spinning" />
-                    <p>Loading your availability...</p>
-                </section>
-            ) : (
-                <div className="my-availability-sections">
-                    {/* Weekly working hours */}
-                    <section className="management-card availability-card my-availability-card">
-                        <div className="my-availability-section-heading">
-                            <div className="my-availability-section-icon">
-                                <CalendarDays size={21} />
-                            </div>
-
-                            <div>
-                                <h2>Weekly working hours</h2>
-                                <p className="muted">
-                                    Set your working days and appointment durations.
-                                </p>
-                            </div>
+                <Paper withBorder radius="lg" p="md">
+                    <Group gap="sm">
+                        <CalendarDays size={22} color="var(--mantine-color-teal-7)" />
+                        <div>
+                            <Text fw={700}>{doctor.full_name}</Text>
+                            <Text size="sm" c="dimmed">{doctor.specialization || "Doctor"}</Text>
                         </div>
+                    </Group>
+                </Paper>
+            )}
 
-                        <form
-                            onSubmit={handleSaveSchedule}
-                            className="availability-form my-availability-form"
-                        >
-                            <label>
-                                Working day
-                                <select
-                                    required
+            {error && <Alert color="red" title="Unable to update availability">{error}</Alert>}
+            {success && <Alert color="teal" title="Updated">{success}</Alert>}
+
+            <Paper withBorder radius="lg" p={{ base: "md", sm: "lg" }}>
+                <Stack gap="md">
+                    <Group gap="sm">
+                        <Clock3 size={20} />
+                        <div>
+                            <Title order={3}>Weekly working hours</Title>
+                            <Text size="sm" c="dimmed">{editingId ? "Update the selected working schedule." : "Add the recurring hours when patients can book appointments."}</Text>
+                        </div>
+                    </Group>
+
+                    <form onSubmit={handleSaveSchedule}>
+                        <Stack gap="md">
+                            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
+                                <Select
+                                    label="Working day"
+                                    data={DAYS}
                                     value={schedule.day_of_week}
-                                    onChange={(e) =>
-                                        setSchedule({
-                                            ...schedule,
-                                            day_of_week: e.target.value,
-                                        })
-                                    }
-                                >
-                                    {DAYS.map((day) => (
-                                        <option key={day.value} value={day.value}>
-                                            {day.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <label>
-                                Start time
-                                <input
-                                    type="time"
-                                    required
-                                    value={schedule.start_time}
-                                    onChange={(e) =>
-                                        setSchedule({
-                                            ...schedule,
-                                            start_time: e.target.value,
-                                        })
-                                    }
+                                    onChange={(value) => setSchedule((current) => ({ ...current, day_of_week: value ?? "1" }))}
+                                    allowDeselect={false}
                                 />
-                            </label>
-
-                            <label>
-                                End time
-                                <input
-                                    type="time"
-                                    required
-                                    value={schedule.end_time}
-                                    onChange={(e) =>
-                                        setSchedule({
-                                            ...schedule,
-                                            end_time: e.target.value,
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <label>
-                                Appointment duration
-                                <select
-                                    required
+                                <TextInput label="Start time" type="time" value={schedule.start_time} onChange={(event) => setSchedule((current) => ({ ...current, start_time: event.currentTarget.value }))} required />
+                                <TextInput label="End time" type="time" value={schedule.end_time} onChange={(event) => setSchedule((current) => ({ ...current, end_time: event.currentTarget.value }))} required />
+                                <Select
+                                    label="Appointment duration"
+                                    data={durationOptions}
                                     value={schedule.slot_duration_minutes}
-                                    onChange={(e) =>
-                                        setSchedule({
-                                            ...schedule,
-                                            slot_duration_minutes: e.target.value,
-                                        })
-                                    }
-                                >
-                                    <option value="15">15 minutes</option>
-                                    <option value="20">20 minutes</option>
-                                    <option value="30">30 minutes</option>
-                                    <option value="45">45 minutes</option>
-                                    <option value="60">60 minutes</option>
-                                </select>
-                            </label>
-
-                            <div className="availability-form-actions my-availability-form-actions">
-                                <button
-                                    type="submit"
-                                    className="complete-button"
-                                    disabled={savingSchedule}
-                                >
-                                    {editingId ? (
-                                        <Pencil size={16} />
-                                    ) : (
-                                        <Plus size={16} />
-                                    )}
-
-                                    {savingSchedule
-                                        ? "Saving..."
-                                        : editingId
-                                            ? "Update schedule"
-                                            : "Add schedule"}
-                                </button>
-
+                                    onChange={(value) => setSchedule((current) => ({ ...current, slot_duration_minutes: value ?? "30" }))}
+                                    allowDeselect={false}
+                                />
+                            </SimpleGrid>
+                            <Group justify="flex-end">
                                 {editingId && (
-                                    <button
-                                        type="button"
-                                        className="refresh-button"
-                                        onClick={cancelEditing}
-                                        disabled={savingSchedule}
-                                    >
+                                    <Button variant="default" leftSection={<X size={15} />} onClick={cancelEditing}>
                                         Cancel edit
-                                    </button>
+                                    </Button>
                                 )}
-                            </div>
-                        </form>
+                                <Button type="submit" loading={savingSchedule} leftSection={editingId ? <Pencil size={15} /> : <Plus size={15} />}>
+                                    {editingId ? "Update schedule" : "Add working hours"}
+                                </Button>
+                            </Group>
+                        </Stack>
+                    </form>
 
-                        <div className="availability-list my-availability-list">
-                            <div className="my-availability-list-heading">
-                                <h3>Your schedule</h3>
-                                <span className="my-availability-count">
-                                    {schedules.length}
-                                </span>
-                            </div>
+                    <Table.ScrollContainer minWidth={570}>
+                        <Table verticalSpacing="sm" highlightOnHover>
+                            <Table.Thead>
+                                <Table.Tr>
+                                    <Table.Th>Day</Table.Th>
+                                    <Table.Th>Hours</Table.Th>
+                                    <Table.Th>Slot</Table.Th>
+                                    <Table.Th>Status</Table.Th>
+                                    <Table.Th ta="right">Actions</Table.Th>
+                                </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                                {schedules.map((item) => (
+                                    <Table.Tr key={item.id}>
+                                        <Table.Td>{DAYS.find((day) => day.value === String(item.day_of_week))?.label || "Unknown"}</Table.Td>
+                                        <Table.Td>{formatTime(item.start_time)} – {formatTime(item.end_time)}</Table.Td>
+                                        <Table.Td>{item.slot_duration_minutes} min</Table.Td>
+                                        <Table.Td><Badge color={item.is_active ? "teal" : "gray"} variant="light">{item.is_active ? "Active" : "Inactive"}</Badge></Table.Td>
+                                        <Table.Td>
+                                            <Group justify="flex-end" gap={5}>
+                                                <Button size="xs" variant="light" leftSection={<Pencil size={13} />} onClick={() => startEditing(item)}>Edit</Button>
+                                                <Button size="xs" variant="light" color="red" leftSection={<Trash2 size={13} />} loading={deletingId === item.id} onClick={() => handleDelete("doctor_availability", item.id, "working schedule")}>Delete</Button>
+                                            </Group>
+                                        </Table.Td>
+                                    </Table.Tr>
+                                ))}
+                                {!loading && schedules.length === 0 && (
+                                    <Table.Tr><Table.Td colSpan={5}><Text ta="center" c="dimmed" py="md">No working hours configured yet.</Text></Table.Td></Table.Tr>
+                                )}
+                                {loading && schedules.length === 0 && (
+                                    <Table.Tr><Table.Td colSpan={5}><Text ta="center" c="dimmed" py="md">Loading your schedule...</Text></Table.Td></Table.Tr>
+                                )}
+                            </Table.Tbody>
+                        </Table>
+                    </Table.ScrollContainer>
+                </Stack>
+            </Paper>
 
-                            {schedules.length === 0 ? (
-                                <div className="my-availability-empty">
-                                    <CalendarDays size={26} />
-                                    <strong>No working hours yet</strong>
-                                    <p>
-                                        Add your first weekly schedule using the form above.
-                                    </p>
-                                </div>
-                            ) : (
-                                schedules.map((item) => (
-                                    <div
-                                        className="availability-item my-availability-item"
-                                        key={item.id}
-                                    >
-                                        <div className="my-availability-item-details">
-                                            <strong>
-                                                {DAYS.find(
-                                                    (day) =>
-                                                        Number(day.value) ===
-                                                        Number(item.day_of_week)
-                                                )?.label || "Day"}
-                                            </strong>
-
-                                            <p className="muted">
-                                                {formatTime(item.start_time)}
-                                                {" – "}
-                                                {formatTime(item.end_time)}
-                                            </p>
-
-                                            <span className="my-availability-slot">
-                                                {item.slot_duration_minutes}-minute appointments
-                                            </span>
-
-                                            {!item.is_active && (
-                                                <span className="my-availability-inactive">
-                                                    Inactive
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="appointment-actions my-availability-actions">
-                                            <button
-                                                type="button"
-                                                className="refresh-button"
-                                                onClick={() => startEditing(item)}
-                                                disabled={savingSchedule}
-                                            >
-                                                <Pencil size={15} />
-                                                Edit
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="cancel-button"
-                                                disabled={deletingId === item.id}
-                                                onClick={() =>
-                                                    handleDelete(
-                                                        "doctor_availability",
-                                                        item.id,
-                                                        "schedule"
-                                                    )
-                                                }
-                                            >
-                                                <Trash2 size={15} />
-                                                {deletingId === item.id
-                                                    ? "Deleting..."
-                                                    : "Delete"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+            <Paper withBorder radius="lg" p={{ base: "md", sm: "lg" }}>
+                <Stack gap="md">
+                    <Group gap="sm">
+                        <CalendarOff size={20} />
+                        <div>
+                            <Title order={3}>Time off and unavailable periods</Title>
+                            <Text size="sm" c="dimmed">Block dates when you are not available for appointments.</Text>
                         </div>
-                    </section>
+                    </Group>
 
-                    {/* Unavailable periods */}
-                    <section className="management-card availability-card my-availability-card">
-                        <div className="my-availability-section-heading">
-                            <div className="my-availability-section-icon my-availability-leave-icon">
-                                <CalendarOff size={21} />
-                            </div>
+                    <form onSubmit={handleSaveLeave}>
+                        <Stack gap="md">
+                            <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                                <TextInput label="Starts at" type="datetime-local" value={leave.starts_at} onChange={(event) => setLeave((current) => ({ ...current, starts_at: event.currentTarget.value }))} required />
+                                <TextInput label="Ends at" type="datetime-local" value={leave.ends_at} onChange={(event) => setLeave((current) => ({ ...current, ends_at: event.currentTarget.value }))} required />
+                            </SimpleGrid>
+                            <Textarea label="Reason (optional)" placeholder="e.g. Personal leave" value={leave.reason} onChange={(event) => setLeave((current) => ({ ...current, reason: event.currentTarget.value }))} minRows={2} autosize />
+                            <Group justify="flex-end">
+                                <Button type="submit" loading={savingLeave} leftSection={<Plus size={16} />}>Add unavailable period</Button>
+                            </Group>
+                        </Stack>
+                    </form>
 
-                            <div>
-                                <h2>Time off</h2>
-                                <p className="muted">
-                                    Add dates when patients should not book appointments.
-                                </p>
-                            </div>
-                        </div>
-
-                        <form
-                            onSubmit={handleSaveLeave}
-                            className="availability-form my-availability-form"
-                        >
-                            <label>
-                                Starts at
-                                <input
-                                    type="datetime-local"
-                                    required
-                                    value={leave.starts_at}
-                                    onChange={(e) =>
-                                        setLeave({
-                                            ...leave,
-                                            starts_at: e.target.value,
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <label>
-                                Ends at
-                                <input
-                                    type="datetime-local"
-                                    required
-                                    value={leave.ends_at}
-                                    onChange={(e) =>
-                                        setLeave({
-                                            ...leave,
-                                            ends_at: e.target.value,
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <label className="availability-reason my-availability-reason">
-                                Reason <span>(optional)</span>
-                                <input
-                                    type="text"
-                                    maxLength={200}
-                                    placeholder="e.g. Leave or conference"
-                                    value={leave.reason}
-                                    onChange={(e) =>
-                                        setLeave({
-                                            ...leave,
-                                            reason: e.target.value,
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <div className="availability-form-actions my-availability-form-actions">
-                                <button
-                                    type="submit"
-                                    className="complete-button"
-                                    disabled={savingLeave}
-                                >
-                                    <Plus size={16} />
-                                    {savingLeave
-                                        ? "Saving..."
-                                        : "Add unavailable period"}
-                                </button>
-                            </div>
-                        </form>
-
-                        <div className="availability-list my-availability-list">
-                            <div className="my-availability-list-heading">
-                                <h3>Scheduled time off</h3>
-                                <span className="my-availability-count">
-                                    {unavailable.length}
-                                </span>
-                            </div>
-
-                            {unavailable.length === 0 ? (
-                                <div className="my-availability-empty">
-                                    <CalendarOff size={26} />
-                                    <strong>No time off scheduled</strong>
-                                    <p>
-                                        Your unavailable dates will appear here.
-                                    </p>
-                                </div>
-                            ) : (
-                                unavailable.map((item) => (
-                                    <div
-                                        className="availability-item my-availability-item"
-                                        key={item.id}
-                                    >
-                                        <div className="my-availability-item-details">
-                                            <strong>
-                                                {item.reason || "Unavailable"}
-                                            </strong>
-
-                                            <p className="muted">
-                                                {formatDateTime(item.starts_at)}
-                                            </p>
-
-                                            <p className="muted">
-                                                Until {formatDateTime(item.ends_at)}
-                                            </p>
-                                        </div>
-
-                                        <div className="appointment-actions my-availability-actions">
-                                            <button
-                                                type="button"
-                                                className="cancel-button"
-                                                disabled={deletingId === item.id}
-                                                onClick={() =>
-                                                    handleDelete(
-                                                        "doctor_unavailability",
-                                                        item.id,
-                                                        "unavailable period"
-                                                    )
-                                                }
-                                            >
-                                                <Trash2 size={15} />
-                                                {deletingId === item.id
-                                                    ? "Deleting..."
-                                                    : "Delete"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
-                </div>
-            )}
-
-        </div>
+                    <Table.ScrollContainer minWidth={650}>
+                        <Table verticalSpacing="sm" highlightOnHover>
+                            <Table.Thead>
+                                <Table.Tr>
+                                    <Table.Th>Starts</Table.Th>
+                                    <Table.Th>Ends</Table.Th>
+                                    <Table.Th>Reason</Table.Th>
+                                    <Table.Th ta="right">Action</Table.Th>
+                                </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                                {unavailable.map((item) => (
+                                    <Table.Tr key={item.id}>
+                                        <Table.Td>{formatDateTime(item.starts_at)}</Table.Td>
+                                        <Table.Td>{formatDateTime(item.ends_at)}</Table.Td>
+                                        <Table.Td>{item.reason || "Not specified"}</Table.Td>
+                                        <Table.Td>
+                                            <Group justify="flex-end">
+                                                <Button size="xs" variant="light" color="red" leftSection={<Trash2 size={14} />} loading={deletingId === item.id} onClick={() => handleDelete("doctor_unavailability", item.id, "unavailable period")}>Delete</Button>
+                                            </Group>
+                                        </Table.Td>
+                                    </Table.Tr>
+                                ))}
+                                {!loading && unavailable.length === 0 && (
+                                    <Table.Tr><Table.Td colSpan={4}><Text ta="center" c="dimmed" py="md">No unavailable periods added.</Text></Table.Td></Table.Tr>
+                                )}
+                                {loading && unavailable.length === 0 && (
+                                    <Table.Tr><Table.Td colSpan={4}><Text ta="center" c="dimmed" py="md">Loading unavailable periods...</Text></Table.Td></Table.Tr>
+                                )}
+                            </Table.Tbody>
+                        </Table>
+                    </Table.ScrollContainer>
+                </Stack>
+            </Paper>
+        </Stack>
     );
 }

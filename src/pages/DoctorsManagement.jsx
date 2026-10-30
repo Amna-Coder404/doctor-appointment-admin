@@ -1,16 +1,22 @@
-
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, RefreshCw, Search } from "lucide-react";
+import {
+    Alert,
+    Button,
+    Group,
+    Paper,
+    Select,
+    Stack,
+    Text,
+    TextInput,
+} from "@mantine/core";
 
 import useDoctors from "../hooks/useDoctors";
 import DoctorStats from "../components/doctors/DoctorStats";
 import DoctorTable from "../components/doctors/DoctorTable";
 import DoctorModal from "../components/doctors/DoctorModal";
-import "../styles/DoctorsManagement.css";
+import PageHeader from "../components/ui/PageHeader";
 
 export default function DoctorsManagement() {
-    const navigate = useNavigate();
-
     const {
         doctors,
         filteredDoctors,
@@ -34,69 +40,72 @@ export default function DoctorsManagement() {
     } = useDoctors();
 
     return (
-        <main className="doctors-page">
-            <header className="doctors-header">
-                <div>
+        <Stack gap="xl">
+            <PageHeader
+                eyebrow="ADMINISTRATION"
+                title="Doctors management"
+                subtitle="Create doctor accounts and manage professional information."
+                action={
+                    <Button onClick={openAdd} leftSection={<Plus size={17} />}>
+                        Add doctor
+                    </Button>
+                }
+            />
 
-                    <h1>Doctors Management</h1>
-                    <p>Manage doctor profiles and availability.</p>
-                </div>
-
-                <button className="doctor-btn doctor-btn-primary" onClick={openAdd}>
-                    <Plus size={18} /> Add Doctor
-                </button>
-            </header>
+            {error && <Alert color="red" title="Something went wrong">{error}</Alert>}
 
             <DoctorStats doctors={doctors} />
 
-            <section className="doctors-panel">
-                <div className="doctors-toolbar">
-                    <div className="doctor-search">
-                        <Search size={18} />
-                        <input
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search doctors..."
-                            aria-label="Search doctors"
-                        />
-                    </div>
-
-                    <div className="doctor-toolbar-actions">
-                        <select
-                            value={filter ?? "all"}
-                            onChange={(event) => setFilter(event.target.value)}
-                            aria-label="Filter doctors by status"
-                        >
-                            <option value="all">All doctors</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-
-                        <button
-                            className="doctor-btn doctor-btn-secondary"
+            <Paper withBorder radius="lg" p={{ base: "md", sm: "lg" }}>
+                <Stack gap="md">
+                    <Group justify="space-between" align="center">
+                        <Stack gap={3}>
+                            <Text fw={700}>All doctors</Text>
+                            <Text size="xs" c="dimmed">
+                                {filteredDoctors.length} of {doctors.length} doctors
+                            </Text>
+                        </Stack>
+                        <Button
+                            variant="light"
+                            color="gray"
+                            leftSection={<RefreshCw size={16} />}
                             onClick={fetchDoctors}
-                            disabled={loading}
-                            title="Refresh doctors"
+                            loading={loading}
                         >
-                            <RefreshCw size={16} />
                             Refresh
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </Group>
 
-                {error && <div className="doctor-error">{error}</div>}
+                    <Group align="flex-end" grow>
+                        <TextInput
+                            leftSection={<Search size={17} />}
+                            placeholder="Search name, specialization or email"
+                            value={search}
+                            onChange={(event) => setSearch(event.currentTarget.value)}
+                        />
+                        <Select
+                            label="Account status"
+                            data={[
+                                { value: "all", label: "All doctors" },
+                                { value: "active", label: "Active" },
+                                { value: "inactive", label: "Inactive" },
+                            ]}
+                            value={filter || "all"}
+                            onChange={setFilter}
+                            allowDeselect={false}
+                            w={{ base: "100%", sm: 190 }}
+                            flex="0 0 190px"
+                        />
+                    </Group>
 
-                <DoctorTable
-                    doctors={filteredDoctors}
-                    loading={loading}
-                    onEdit={openEdit}
-                    onToggleStatus={handleToggleStatus}
-                />
-
-                <footer className="doctors-footer">
-                    Showing {filteredDoctors.length} of {doctors.length} doctors
-                </footer>
-            </section>
+                    <DoctorTable
+                        doctors={filteredDoctors}
+                        loading={loading}
+                        onEdit={openEdit}
+                        onToggleStatus={handleToggleStatus}
+                    />
+                </Stack>
+            </Paper>
 
             {formOpen && (
                 <DoctorModal
@@ -108,6 +117,6 @@ export default function DoctorsManagement() {
                     onClose={closeModal}
                 />
             )}
-        </main>
+        </Stack>
     );
 }

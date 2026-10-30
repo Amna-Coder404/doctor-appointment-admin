@@ -1,49 +1,51 @@
-
-import React from 'react'
-import {
-    Badge,
-    Card,
-    Skeleton,
-    ThemeIcon,
-} from "@mantine/core";
+import { ArrowUpRight } from "lucide-react";
+import { Card, Group, Stack, Text, ThemeIcon, Title } from "@mantine/core";
 import { Link } from "react-router-dom";
 
-import {
-    Activity,
-    CalendarDays,
-    Stethoscope,
-    Users,
-    ArrowUpRight,
-    Clock,
-} from "lucide-react";
-const ManagementCard = ({ icon, title, description, target }) => {
+export default function ManagementCard({
+    icon,
+    title,
+    description,
+    target,
+    color = "teal",
+}) {
     return (
         <Card
             component={Link}
             to={target}
-            className="management-card"
-            padding="lg"
-            radius="lg"
             withBorder
+            radius="lg"
+            padding="lg"
+            h="100%"
+            style={{
+                color: "inherit",
+                textDecoration: "none",
+                transition: "transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease",
+            }}
+            onMouseEnter={(event) => {
+                event.currentTarget.style.transform = "translateY(-3px)";
+                event.currentTarget.style.borderColor = "var(--mantine-color-teal-4)";
+                event.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
+            }}
+            onMouseLeave={(event) => {
+                event.currentTarget.style.transform = "none";
+                event.currentTarget.style.borderColor = "var(--mantine-color-default-border)";
+                event.currentTarget.style.boxShadow = "none";
+            }}
         >
-            <ThemeIcon
-                className="management-icon"
-                size={46}
-                radius="md"
-                variant="light"
-                color="violet"
-            >
-                {icon}
-            </ThemeIcon>
-
-            <h3>{title}</h3>
-            <p>{description}</p>
-
-            <span className="card-link">
-                Open section <ArrowUpRight size={16} />
-            </span>
+            <Stack gap="md" h="100%">
+                <Group justify="space-between">
+                    <ThemeIcon size={46} radius="md" color={color} variant="light">
+                        {icon}
+                    </ThemeIcon>
+                    <ArrowUpRight size={19} color="var(--mantine-color-dimmed)" />
+                </Group>
+                <Stack gap={6} style={{ flex: 1 }}>
+                    <Title order={4}>{title}</Title>
+                    <Text size="sm" c="dimmed" lh={1.6}>{description}</Text>
+                </Stack>
+                <Text size="sm" fw={700} c="teal">Open section <span aria-hidden="true">→</span></Text>
+            </Stack>
         </Card>
-    )
+    );
 }
-
-export default ManagementCard

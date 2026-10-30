@@ -4,22 +4,22 @@ import {
     uploadDoctorImage,
 } from "../services/doctorService";
 
+const emptyForm = {
+    full_name: "",
+    phone: "",
+    specialization: "",
+    qualification: "",
+    bio: "",
+    clinic_name: "",
+    clinic_address: "",
+};
+
 export function useDoctorDashboard({ doctor, profile, onUpdated }) {
-    const [originalForm, setOriginalForm] = useState(null);
-    const [originalImage, setOriginalImage] = useState("");
-
-    const [form, setForm] = useState({
-        full_name: "",
-        phone: "",
-        specialization: "",
-        qualification: "",
-        bio: "",
-        clinic_name: "",
-        clinic_address: "",
-    });
-
+    const [form, setForm] = useState(emptyForm);
+    const [originalForm, setOriginalForm] = useState(emptyForm);
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState("");
+    const [originalImage, setOriginalImage] = useState("");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -27,7 +27,7 @@ export function useDoctorDashboard({ doctor, profile, onUpdated }) {
     useEffect(() => {
         if (!doctor) return;
 
-        const initialForm = {
+        const nextForm = {
             full_name: doctor.full_name || "",
             phone: doctor.phone || "",
             specialization: doctor.specialization || "",
@@ -36,42 +36,35 @@ export function useDoctorDashboard({ doctor, profile, onUpdated }) {
             clinic_name: doctor.clinic_name || "",
             clinic_address: doctor.clinic_address || "",
         };
+        const nextImage = doctor.profile_image_url || "";
 
-        const initialImage = doctor.profile_image_url || "";
-
-        setForm(initialForm);
-        setOriginalForm(initialForm);
-        setPreview(initialImage);
-        setOriginalImage(initialImage);
+        setForm(nextForm);
+        setOriginalForm(nextForm);
         setImage(null);
+        setOriginalImage(nextImage);
+        setPreview(nextImage);
         setError("");
-        setSuccess("");
     }, [doctor]);
 
     useEffect(() => {
-        if (!image) return;
+        if (!image) {
+            setPreview(originalImage);
+            return undefined;
+        }
 
         const objectUrl = URL.createObjectURL(image);
         setPreview(objectUrl);
-
         return () => URL.revokeObjectURL(objectUrl);
-    }, [image]);
+    }, [image, originalImage]);
 
     function handleChange(field, value) {
-        setForm((current) => ({
-            ...current,
-            [field]: value,
-        }));
-
+        setForm((current) => ({ ...current, [field]: value }));
         setError("");
         setSuccess("");
     }
 
     function handleCancel() {
-        if (originalForm) {
-            setForm({ ...originalForm });
-        }
-
+        setForm({ ...originalForm });
         setImage(null);
         setPreview(originalImage);
         setError("");
@@ -80,37 +73,35 @@ export function useDoctorDashboard({ doctor, profile, onUpdated }) {
 
     async function handleSave(event) {
         event.preventDefault();
-
         setError("");
         setSuccess("");
+
+        if (!profile?.id || doctor?.user_id !== profile.id) {
+            setError("Your doctor account could not be verified.");
+            return;
+        }
+
         setSaving(true);
 
         try {
-            if (!profile?.id || doctor?.user_id !== profile.id) {
-                throw new Error("Your doctor account could not be verified.");
-            }
-
             const updates = { ...form };
 
             if (image) {
                 updates.profile_image_url = await uploadDoctorImage(image);
             }
 
-            const updatedDoctor = await updateMyDoctorProfile(
-                profile.id,
-                updates
-            );
+            const updatedDoctor = await updateMyDoctorProfile(profile.id, updates);
+            const savedImage = updatedDoctor?.profile_image_url || originalImage;
 
-            setImage(null);
-            setPreview(updatedDoctor?.profile_image_url || preview);
-            setOriginalImage(updatedDoctor?.profile_image_url || preview);
             setOriginalForm({ ...form });
-
-            setSuccess("Your profile has been updated successfully.");
+            setOriginalImage(savedImage);
+            setImage(null);
+            setPreview(savedImage);
+            setSuccess("Your professional profile has been updated.");
 
             await onUpdated?.(updatedDoctor);
         } catch (err) {
-            setError(err.message || "Could not update your profile.");
+            setError(err?.message || "Could not update your profile.");
         } finally {
             setSaving(false);
         }
