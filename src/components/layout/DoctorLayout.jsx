@@ -1,4 +1,6 @@
+
 import { useState } from "react";
+
 import {
     Activity,
     CalendarDays,
@@ -6,6 +8,7 @@ import {
     LogOut,
     Stethoscope,
 } from "lucide-react";
+
 import {
     Avatar,
     Badge,
@@ -21,16 +24,41 @@ import {
     Text,
     ThemeIcon,
 } from "@mantine/core";
+
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+
 import useAuth from "../../hooks/useAuth";
+import { useNotifications } from "../../hooks/useNotifications";
 
 const items = [
-    { label: "Dashboard", description: "Overview and profile", to: "/doctor/dashboard", icon: Activity, end: true },
-    { label: "Appointments", description: "Patient bookings", to: "/doctor/appointments", icon: CalendarDays },
-    { label: "My availability", description: "Working hours and leave", to: "/doctor/availability", icon: Clock3 },
+    {
+        label: "Dashboard",
+        description: "Overview and profile",
+        to: "/doctor/dashboard",
+        icon: Activity,
+        end: true,
+    },
+    {
+        label: "Appointments",
+        description: "Patient bookings",
+        to: "/doctor/appointments",
+        icon: CalendarDays,
+    },
+    {
+        label: "My availability",
+        description: "Working hours and leave",
+        to: "/doctor/availability",
+        icon: Clock3,
+    },
 ];
 
-function DoctorSidebar({ profile, onNavigate, onLogout }) {
+function DoctorSidebar({
+    profile,
+    onNavigate,
+    onLogout,
+    onAppointmentsClick,
+    doctorUnreadCount = 0,
+}) {
     const doctor = profile?.doctor;
     const name = doctor?.full_name || profile?.full_name || "Doctor";
     const avatar = doctor?.profile_image_url || profile?.avatar_url || null;
@@ -41,16 +69,32 @@ function DoctorSidebar({ profile, onNavigate, onLogout }) {
                 <ThemeIcon size={44} radius="lg" color="teal">
                     <Stethoscope size={23} />
                 </ThemeIcon>
+
                 <Box>
-                    <Text fw={800} size="lg" c="dark">MediBook</Text>
-                    <Text size="xs" c="dimmed">Doctor workspace</Text>
+                    <Text fw={800} size="lg" c="dark">
+                        MediBook
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                        Doctor workspace
+                    </Text>
                 </Box>
             </Group>
+
             <Divider />
+
             <Stack gap={5}>
-                <Text size="xs" fw={700} c="dimmed" px="sm" mb={4} tt="uppercase" lts={1}>
+                <Text
+                    size="xs"
+                    fw={700}
+                    c="dimmed"
+                    px="sm"
+                    mb={4}
+                    tt="uppercase"
+                    lts={1}
+                >
                     Workspace
                 </Text>
+
                 {items.map(({ label, description, to, icon: Icon, end }) => (
                     <MantineNavLink
                         key={to}
@@ -60,26 +104,57 @@ function DoctorSidebar({ profile, onNavigate, onLogout }) {
                         label={label}
                         description={description}
                         leftSection={<Icon size={18} />}
-                        onClick={onNavigate}
+                        rightSection={
+                            label === "Appointments" && doctorUnreadCount > 0 ? (
+                                <Badge color="red" variant="filled" size="sm" radius="xl">
+                                    {doctorUnreadCount > 99 ? "99+" : doctorUnreadCount}
+                                </Badge>
+                            ) : null
+                        }
+                        onClick={() => {
+                            if (to === "/doctor/appointments") {
+                                onAppointmentsClick?.();
+                            }
+
+                            onNavigate?.();
+                        }}
                         variant="light"
                         color="teal"
                         radius="md"
                     />
                 ))}
             </Stack>
+
             <Box style={{ flex: 1 }} />
+
             <Divider />
+
             <Group wrap="nowrap" gap="sm">
                 <Avatar src={avatar} color="teal" radius="md">
                     {name.charAt(0).toUpperCase()}
                 </Avatar>
+
                 <Box style={{ minWidth: 0, flex: 1 }}>
-                    <Text size="sm" fw={700} truncate>{name}</Text>
-                    <Text size="xs" c="dimmed" truncate>{doctor?.specialization || "Doctor"}</Text>
+                    <Text size="sm" fw={700} truncate>
+                        {name}
+                    </Text>
+                    <Text size="xs" c="dimmed" truncate>
+                        {doctor?.specialization || "Doctor"}
+                    </Text>
                 </Box>
-                <Badge color="teal" variant="light" size="xs">Doctor</Badge>
+
+                <Badge color="teal" variant="light" size="xs">
+                    Doctor
+                </Badge>
             </Group>
-            <Button variant="light" color="red" fullWidth leftSection={<LogOut size={16} />} onClick={onLogout}>
+
+            <Button
+                variant="light"
+                color="red"
+                fullWidth
+                leftSection={<LogOut size={16} />}
+                onClick={onLogout}
+            >
                 Sign out
             </Button>
         </Stack>
@@ -90,6 +165,15 @@ export default function DoctorLayout({ profile }) {
     const { logout } = useAuth();
     const [opened, setOpened] = useState(false);
     const location = useLocation();
+
+    const {
+        unreadCount: doctorUnreadCount,
+        markAllAsRead: markDoctorNotificationsAsRead,
+    } = useNotifications(profile?.id, "doctor");
+
+    const handleAppointmentsClick = () => {
+        markDoctorNotificationsAsRead().catch(console.error);
+    };
 
     const handleLogout = async () => {
         setOpened(false);
@@ -103,9 +187,19 @@ export default function DoctorLayout({ profile }) {
                 w={264}
                 radius={0}
                 withBorder
-                style={{ position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}
+                style={{
+                    position: "sticky",
+                    top: 0,
+                    height: "100vh",
+                    flexShrink: 0,
+                }}
             >
-                <DoctorSidebar profile={profile} onLogout={handleLogout} />
+                <DoctorSidebar
+                    profile={profile}
+                    doctorUnreadCount={doctorUnreadCount}
+                    onAppointmentsClick={handleAppointmentsClick}
+                    onLogout={handleLogout}
+                />
             </Paper>
 
             <Drawer
@@ -118,13 +212,20 @@ export default function DoctorLayout({ profile }) {
             >
                 <DoctorSidebar
                     profile={profile}
+                    doctorUnreadCount={doctorUnreadCount}
+                    onAppointmentsClick={handleAppointmentsClick}
                     onNavigate={() => setOpened(false)}
                     onLogout={handleLogout}
                 />
             </Drawer>
 
             <Box style={{ minWidth: 0, flex: 1 }}>
-                <Paper radius={0} withBorder px={{ base: "md", md: "xl" }} py="sm">
+                <Paper
+                    radius={0}
+                    withBorder
+                    px={{ base: "md", md: "xl" }}
+                    py="sm"
+                >
                     <Group justify="space-between">
                         <Group gap="sm">
                             <Burger
@@ -134,13 +235,22 @@ export default function DoctorLayout({ profile }) {
                                 size="sm"
                                 aria-label="Open navigation"
                             />
+
                             <Box>
-                                <Text size="sm" fw={700}>Doctor workspace</Text>
-                                <Text size="xs" c="dimmed">Appointments and clinic schedule</Text>
+                                <Text size="sm" fw={700}>
+                                    Doctor workspace
+                                </Text>
+                                <Text size="xs" c="dimmed">
+                                    Appointments and clinic schedule
+                                </Text>
                             </Box>
                         </Group>
+
                         <Avatar
-                            src={profile?.doctor?.profile_image_url || profile?.avatar_url}
+                            src={
+                                profile?.doctor?.profile_image_url ||
+                                profile?.avatar_url
+                            }
                             color="teal"
                             radius="xl"
                             size="sm"
