@@ -126,3 +126,29 @@ export async function updateDoctorAppointmentStatus(
 export async function completeDoctorAppointment(appointmentId) {
     return updateDoctorAppointmentStatus(appointmentId, "completed");
 }
+
+// Admin: delete an appointment.
+export async function deleteAppointment(appointmentId) {
+    const { data, error } = await supabase
+        .from("appointments")
+        .delete()
+        .eq("id", appointmentId)
+        .select("id")
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}
+
+// Doctor: securely delete an appointment belonging to their own profile.
+export async function deleteDoctorAppointment(appointmentId) {
+    const { error } = await supabase.rpc(
+        "doctor_delete_appointment",
+        {
+            p_appointment_id: appointmentId,
+        }
+    );
+
+    if (error) throw error;
+}

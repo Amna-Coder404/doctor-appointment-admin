@@ -7,6 +7,8 @@ import {
     getDoctorAppointments,
     updateAppointmentStatus,
     updateDoctorAppointmentStatus,
+    deleteAppointment,
+    deleteDoctorAppointment,
 } from "../services/appointmentService";
 
 export default function useAppointments({
@@ -25,6 +27,11 @@ export default function useAppointments({
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+
+    const [deletingId, setDeletingId] = useState(null);
+
+
 
     const loadAppointments = useCallback(async () => {
         if (isDoctor && !userId) {
@@ -146,7 +153,31 @@ export default function useAppointments({
         }),
         [appointments]
     );
+    const removeAppointment = async (appointment) => {
+        setDeletingId(appointment.id);
+        setError("");
+        setSuccess("");
 
+        try {
+            if (isDoctor) {
+                await deleteDoctorAppointment(appointment.id);
+            } else {
+                await deleteAppointment(appointment.id);
+            }
+
+            setAppointments((current) =>
+                current.filter((item) => item.id !== appointment.id)
+            );
+
+            setSuccess("Appointment deleted successfully.");
+            return true;
+        } catch (err) {
+            setError(err.message || "Could not delete appointment.");
+            return false;
+        } finally {
+            setDeletingId(null);
+        }
+    };
     return {
         appointments: filteredAppointments,
         allAppointments: appointments,
@@ -162,5 +193,8 @@ export default function useAppointments({
         success,
         changeStatus,
         refresh: loadAppointments,
+
+        deletingId,
+        removeAppointment,
     };
 }
