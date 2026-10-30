@@ -25,7 +25,7 @@ const fields = [
     { name: "clinic_address", label: "Clinic address" },
 ];
 
-export default function DoctorForm({ initialForm, saving, formError, onSave, onCancel }) {
+export default function DoctorForm({ initialForm, saving, formError, onSave, onCancel, isEdit = false, }) {
     const [form, setForm] = useState(initialForm);
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(initialForm.profile_image_url || "");
@@ -99,19 +99,29 @@ export default function DoctorForm({ initialForm, saving, formError, onSave, onC
                 {imageError && <Alert color="red">{imageError}</Alert>}
 
                 <Grid>
-                    {fields.map((field) => (
-                        <Grid.Col key={field.name} span={{ base: 12, sm: 6 }}>
-                            <TextInput
-                                label={field.label}
-                                type={field.type || "text"}
-                                value={form[field.name] ?? ""}
-                                onChange={(event) => updateField(field.name, event.currentTarget.value)}
-                                required={field.required}
-                                min={field.type === "number" ? 0 : undefined}
-                                step={field.name === "consultation_fee" ? "0.01" : field.name === "experience_years" ? "1" : undefined}
-                            />
-                        </Grid.Col>
-                    ))}
+                    {fields
+                        .filter((field) => field.name !== "email" || !isEdit)
+                        .map((field) => (
+                            <Grid.Col key={field.name} span={{ base: 12, sm: 6 }}>
+                                <TextInput
+                                    label={field.label}
+                                    type={field.type || "text"}
+                                    value={form[field.name] ?? ""}
+                                    onChange={(event) =>
+                                        updateField(field.name, event.currentTarget.value)
+                                    }
+                                    required={field.required || field.name === "email"}
+                                    min={field.type === "number" ? 0 : undefined}
+                                    step={
+                                        field.name === "consultation_fee"
+                                            ? "0.01"
+                                            : field.name === "experience_years"
+                                                ? "1"
+                                                : undefined
+                                    }
+                                />
+                            </Grid.Col>
+                        ))}
                     <Grid.Col span={12}>
                         <Textarea
                             label="Professional biography"

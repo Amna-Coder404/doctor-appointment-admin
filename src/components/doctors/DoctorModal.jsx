@@ -28,6 +28,7 @@ export default function DoctorModal({
                 formError={formError}
                 onSave={onSave}
                 onCancel={onClose}
+                isEdit={!!doctor}
             />
         </Modal>
     );
