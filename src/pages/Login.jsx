@@ -67,8 +67,9 @@ export default function Login() {
                 alignItems: "center",
                 justifyContent: "center",
                 background: "#091522",
+                background: "#F5F8FA",
                 backgroundImage:
-                    "radial-gradient(ellipse at 10% 10%, rgba(20,184,166,.13), transparent 40%), radial-gradient(ellipse at 90% 90%, rgba(45,212,191,.08), transparent 35%)",
+                    "radial-gradient(ellipse at 10% 10%, rgba(20,184,166,.08), transparent 40%), radial-gradient(ellipse at 90% 90%, rgba(45,212,191,.07), transparent 35%)",
             }}
         >
             <Paper
@@ -78,7 +79,7 @@ export default function Login() {
                 maw={1080}
                 style={{
                     overflow: "hidden",
-                    border: "1px solid rgba(255,255,255,.08)",
+                    border: "1px solid #E8EEF2",
                 }}
             >
                 <Grid gutter={0} align="stretch">
