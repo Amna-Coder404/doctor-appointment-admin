@@ -13,7 +13,6 @@ export async function getDoctors() {
 }
 
 // Create a real doctor account through the secure Edge Function.
-
 export async function createDoctorAccount(doctor) {
     const { data, error } = await supabase.functions.invoke(
         "create-doctor-account",
@@ -25,26 +24,28 @@ export async function createDoctorAccount(doctor) {
 
         try {
             const response = error.context;
+
             if (response && typeof response.clone === "function") {
                 const body = await response.clone().json();
                 message = body?.error || body?.message || message;
             }
         } catch {
-            // Keep the original error message if the response isn't JSON.
+            // Keep original error message.
         }
 
         throw new Error(message);
     }
 
     if (!data?.doctor) {
-        throw new Error(data?.error || "The server did not return the doctor record.");
+        throw new Error(
+            data?.error || "The server did not return the doctor record."
+        );
     }
 
     return data.doctor;
 }
 
-
-// Update an existing doctor without creating another login.
+// Update an existing doctor.
 export async function updateDoctor(id, updates) {
     const { data, error } = await supabase
         .from("doctors")
@@ -60,12 +61,17 @@ export async function updateDoctor(id, updates) {
     return data;
 }
 
+// Update doctor account status.
 export async function updateDoctorStatus(id, isActive) {
     return updateDoctor(id, { is_active: isActive });
 }
 
-// Doctor kud apni info edit kary ga
+// Doctor edits their own profile.
 export async function updateMyDoctorProfile(userId, updates) {
+    if (!userId) {
+        throw new Error("Doctor user ID is missing. Please log in again.");
+    }
+
     const allowedFields = [
         "full_name",
         "phone",
@@ -80,10 +86,14 @@ export async function updateMyDoctorProfile(userId, updates) {
     ];
 
     const safeUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([key]) =>
-            allowedFields.includes(key)
+        Object.entries(updates).filter(([key, value]) =>
+            allowedFields.includes(key) && value !== undefined
         )
     );
+
+    if (Object.keys(safeUpdates).length === 0) {
+        throw new Error("No valid profile changes were provided.");
+    }
 
     const { data, error } = await supabase
         .from("doctors")
@@ -93,18 +103,24 @@ export async function updateMyDoctorProfile(userId, updates) {
         })
         .eq("user_id", userId)
         .select()
-        .single();
+        .maybeSingle();
 
     if (error) throw error;
+
+    if (!data) {
+        throw new Error(
+            "Doctor profile record not found. Please contact the administrator to link your doctor account."
+        );
+    }
 
     return data;
 }
 
-// Upload a doctor profile photo.
+// Upload doctor profile photo.
 export async function uploadDoctorImage(file) {
     if (!file) return null;
 
-    if (!file.type.startsWith("image/")) {
+    if (!file.type?.startsWith("image/")) {
         throw new Error("Please select an image file.");
     }
 
@@ -127,7 +143,9 @@ export async function uploadDoctorImage(file) {
 
     if (error) throw error;
 
-    const { data } = supabase.storage.from("doctor-photos").getPublicUrl(filePath);
+    const { data } = supabase.storage
+        .from("doctor-photos")
+        .getPublicUrl(filePath);
 
     return data.publicUrl;
 }

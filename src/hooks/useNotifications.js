@@ -40,35 +40,6 @@ export function useNotifications(recipientId, recipientRole) {
         }
     }, [recipientId, recipientRole]);
 
-    useEffect(() => {
-        if (!recipientId || !recipientRole) {
-            setNotifications([]);
-            setUnreadCount(0);
-            return;
-        }
-
-        refreshNotifications();
-
-        const channel = supabase
-            .channel(`notifications-${recipientRole}-${recipientId}`)
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "notifications",
-                    filter: `recipient_id=eq.${recipientId}`,
-                },
-                () => refreshNotifications()
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [recipientId, recipientRole, refreshNotifications]);
-
-    // Mark one notification as read
     const markAsRead = useCallback(async (notificationId) => {
         if (!recipientId || !recipientRole || !notificationId) return;
 
@@ -78,7 +49,6 @@ export function useNotifications(recipientId, recipientRole) {
 
         if (!notification || notification.is_read) return;
 
-        // Update UI immediately
         setNotifications((previous) =>
             previous.map((item) =>
                 item.id === notificationId
@@ -102,7 +72,6 @@ export function useNotifications(recipientId, recipientRole) {
         }
     }, [recipientId, recipientRole, notifications, refreshNotifications]);
 
-    // Mark all notifications as read
     const markAllAsRead = useCallback(async () => {
         if (!recipientId || !recipientRole || unreadCount === 0) return;
 
@@ -120,6 +89,36 @@ export function useNotifications(recipientId, recipientRole) {
             throw err;
         }
     }, [recipientId, recipientRole, unreadCount, refreshNotifications]);
+
+    useEffect(() => {
+        if (!recipientId || !recipientRole) {
+            setNotifications([]);
+            setUnreadCount(0);
+            return;
+        }
+
+        refreshNotifications();
+
+        const channel = supabase
+            .channel(`notifications-${recipientRole}-${recipientId}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "notifications",
+                    filter: `recipient_id=eq.${recipientId}`,
+                },
+                () => {
+                    refreshNotifications();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [recipientId, recipientRole, refreshNotifications]);
 
     return {
         notifications,
