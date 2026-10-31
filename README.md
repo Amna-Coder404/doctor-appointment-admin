@@ -1,8 +1,8 @@
-# 🩺 MediBook – Doctor Appointment Management System
+# 🩺 CareUp – Doctor Appointment Management System
 
 ### Manage doctors and appointments with ease.
 
-MediBook is a modern web-based doctor appointment management system built with **React, Vite, and Supabase**. It provides separate dashboards for administrators and doctors, making it easier to manage doctors, monitor appointments, and handle daily appointment operations.
+CareUp is a modern web-based doctor appointment management system built with **React, Vite, and Supabase**. It provides separate dashboards for administrators and doctors, making it easier to manage doctors, monitor appointments, and handle daily appointment operations.
 
 ## ✨ Features
 
@@ -133,7 +133,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_publishable_key
 
 ## 🎯 Project Goal
 
-The goal of MediBook is to simplify doctor and appointment management through a centralized web application. By providing dedicated admin and doctor dashboards, the system makes appointment operations more organized, accessible, and efficient.
+The goal of CareUp is to simplify doctor and appointment management through a centralized web application. By providing dedicated admin and doctor dashboards, the system makes appointment operations more organized, accessible, and efficient.
 
 ## 👩‍💻 Developer
 

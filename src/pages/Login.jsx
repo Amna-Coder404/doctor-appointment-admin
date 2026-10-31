@@ -138,7 +138,7 @@ export default function Login() {
 
                                     <Box>
                                         <Text fw={800} size="xl" c="white">
-                                            MediBook
+                                            CareUp
                                         </Text>
                                         <Text
                                             size="xs"
@@ -266,7 +266,7 @@ export default function Login() {
                                         lts={1.5}
                                         mb="sm"
                                     >
-                                        Welcome to MediBook
+                                        Welcome to CareUp
                                     </Text>
 
                                     <Title
@@ -353,7 +353,7 @@ export default function Login() {
                                             }
                                             mt="xs"
                                         >
-                                            Sign in to MediBook
+                                            Sign in to CareUp
                                         </Button>
                                     </Stack>
                                 </form>

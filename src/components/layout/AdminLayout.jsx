@@ -73,7 +73,7 @@ function SidebarContent({
 
                 <Box>
                     <Text fw={800} size="lg" c="dark">
-                        MediBook
+                        CareUp
                     </Text>
                     <Text size="xs" c="dimmed">
                         Clinic management
@@ -201,7 +201,7 @@ export default function AdminLayout({ profile }) {
             <Drawer
                 opened={opened}
                 onClose={() => setOpened(false)}
-                title="MediBook"
+                title="CareUp"
                 size={280}
                 padding={0}
                 hiddenFrom="md"

@@ -105,11 +105,18 @@ export default function DoctorForm({ initialForm, saving, formError, onSave, onC
                             <Grid.Col key={field.name} span={{ base: 12, sm: 6 }}>
                                 <TextInput
                                     label={field.label}
-                                    type={field.type || "text"}
+                                    type={field.name === "phone" ? "tel" : field.type || "text"}
                                     value={form[field.name] ?? ""}
-                                    onChange={(event) =>
-                                        updateField(field.name, event.currentTarget.value)
-                                    }
+                                    onChange={(event) => {
+                                        let value = event.currentTarget.value;
+
+                                        if (field.name === "phone") {
+                                            value = value.replace(/\D/g, "").slice(0, 11);
+                                        }
+
+                                        updateField(field.name, value);
+                                    }}
+                                    maxLength={field.name === "phone" ? 11 : undefined}
                                     required={field.required || field.name === "email"}
                                     min={field.type === "number" ? 0 : undefined}
                                     step={

@@ -95,7 +95,7 @@ export default function ResetPassword() {
                         <Activity size={22} />
                     </ThemeIcon>
                     <Box>
-                        <Text fw={800} size="lg">MediBook</Text>
+                        <Text fw={800} size="lg">CareUp</Text>
                         <Text size="xs" c="dimmed">Healthcare management</Text>
                     </Box>
                 </Group>
@@ -135,7 +135,7 @@ export default function ResetPassword() {
 
                 <Text size="xs" c="dimmed" ta="center">
                     <Stethoscope size={13} style={{ verticalAlign: "middle", marginRight: 5 }} />
-                    MediBook secure account setup
+                    CareUp secure account setup
                 </Text>
             </Stack>
         </Box>
