@@ -20,6 +20,7 @@ import {
     Group,
     Paper,
     PasswordInput,
+    SegmentedControl,
     Stack,
     Text,
     TextInput,
@@ -56,7 +57,11 @@ export default function Login() {
         error,
         submitting,
         handleSubmit,
+        role,
+        setRole,
     } = useLogin();
+
+    const selectedRole = role === "admin" ? "Administrator" : "Doctor";
 
     return (
         <Box
@@ -66,7 +71,6 @@ export default function Login() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "#091522",
                 background: "#F5F8FA",
                 backgroundImage:
                     "radial-gradient(ellipse at 10% 10%, rgba(20,184,166,.08), transparent 40%), radial-gradient(ellipse at 90% 90%, rgba(45,212,191,.07), transparent 35%)",
@@ -281,10 +285,88 @@ export default function Login() {
                                     </Title>
 
                                     <Text size="sm" c="dimmed" mt={8}>
-                                        Enter your credentials to access your
-                                        workspace.
+                                        Select your workspace and enter your
+                                        login credentials.
                                     </Text>
                                 </Box>
+
+                                {/* Role selection */}
+                                <Stack gap="sm">
+                                    <Group justify="space-between">
+                                        <Text
+                                            size="sm"
+                                            fw={700}
+                                            c="#344b5a"
+                                        >
+                                            Sign in as
+                                        </Text>
+
+                                        <Text
+                                            size="xs"
+                                            c="teal.7"
+                                            fw={600}
+                                        >
+                                            {selectedRole}
+                                        </Text>
+                                    </Group>
+
+                                    <SegmentedControl
+                                        fullWidth
+                                        size="lg"
+                                        radius="md"
+                                        value={role}
+                                        onChange={setRole}
+                                        color="teal"
+                                        data={[
+                                            {
+                                                value: "admin",
+                                                label: (
+                                                    <Group
+                                                        justify="center"
+                                                        gap={8}
+                                                        wrap="nowrap"
+                                                    >
+                                                        <ShieldCheck
+                                                            size={17}
+                                                        />
+                                                        <Text
+                                                            size="sm"
+                                                            fw={600}
+                                                        >
+                                                            Admin
+                                                        </Text>
+                                                    </Group>
+                                                ),
+                                            },
+                                            {
+                                                value: "doctor",
+                                                label: (
+                                                    <Group
+                                                        justify="center"
+                                                        gap={8}
+                                                        wrap="nowrap"
+                                                    >
+                                                        <Stethoscope
+                                                            size={17}
+                                                        />
+                                                        <Text
+                                                            size="sm"
+                                                            fw={600}
+                                                        >
+                                                            Doctor
+                                                        </Text>
+                                                    </Group>
+                                                ),
+                                            },
+                                        ]}
+                                    />
+
+                                    <Text size="xs" c="dimmed">
+                                        {role === "admin"
+                                            ? "Access clinic management, doctors and appointments."
+                                            : "Access your personal doctor workspace and appointments."}
+                                    </Text>
+                                </Stack>
 
                                 {error && (
                                     <Alert
@@ -305,9 +387,7 @@ export default function Login() {
                                             type="email"
                                             size="md"
                                             radius="md"
-                                            leftSection={
-                                                <Mail size={17} />
-                                            }
+                                            leftSection={<Mail size={17} />}
                                             value={email}
                                             onChange={(event) =>
                                                 setEmail(
@@ -353,7 +433,7 @@ export default function Login() {
                                             }
                                             mt="xs"
                                         >
-                                            Sign in to CareUp
+                                            Sign in as {role === "admin" ? "Admin" : "Doctor"}
                                         </Button>
                                     </Stack>
                                 </form>

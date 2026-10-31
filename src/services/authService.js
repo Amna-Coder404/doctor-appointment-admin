@@ -31,7 +31,8 @@ export const getProfile = async (userId) => {
 
 
 // Login with Email and Password
-export const loginWithPassword = async (email, password) => {
+// Login with Email, Password and Role
+export const loginWithPassword = async (email, password, selectedRole) => {
     const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -49,13 +50,21 @@ export const loginWithPassword = async (email, password) => {
             );
         }
 
+        // Verify selected role against actual database role
+        if (profile.role !== selectedRole) {
+            throw new Error(
+                `This account is registered as ${profile.role}, not ${selectedRole}.`
+            );
+        }
+
         return profile;
     } catch (error) {
         await supabase.auth.signOut();
 
         if (
             error.message ===
-            "This account does not have access to the admin panel."
+            "This account does not have access to the admin panel." ||
+            error.message.startsWith("This account is registered as")
         ) {
             throw error;
         }

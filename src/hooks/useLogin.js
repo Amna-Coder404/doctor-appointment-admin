@@ -5,6 +5,7 @@ import { loginWithPassword } from "../services/authService";
 
 const useLogin = () => {
     const navigate = useNavigate();
+    const [role, setRole] = useState("admin");
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -18,7 +19,7 @@ const useLogin = () => {
         setSubmitting(true);
 
         try {
-            const profile = await loginWithPassword(email, password);
+            const profile = await loginWithPassword(email, password, role);
 
             if (profile.role === "admin") {
                 navigate("/admin/dashboard", { replace: true });
@@ -42,6 +43,8 @@ const useLogin = () => {
         error,
         submitting,
         handleSubmit,
+        role,
+        setRole,
     };
 }
 
